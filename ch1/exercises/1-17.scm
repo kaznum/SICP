@@ -1,0 +1,23 @@
+;; (define (* a b)
+;;   (if (= b 0)
+;;       0
+;;       (+ a (* a (- b 1)))))
+
+(define (mul a b)
+  (define (double n) (+ n n))
+  (define (halve n)
+    (define (iter-halve r n)
+      (cond ((< n r) (- r 1))
+	    ((= n r) r)
+	    (iter-halve (+ r 1) (- n 1))))
+    (iter-halve 0 n))
+  (define (even? n) (= (+ (halve n) (halve n)) n))
+  (cond ((= b 0) 0)
+	((even? b) (double (mul a (halve b))))
+	(else (+ a (mul a (- b 1))))))
+
+(mul 2 3)
+(mul 0 3)
+(mul 5 6)
+(mul 5 7)
+(mul 5 0)
