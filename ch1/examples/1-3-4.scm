@@ -43,4 +43,15 @@
 
 ;; Newton's method
 
-;; to be continued
+(define (deriv g)
+  (lambda (x)
+    (/ (- (g (+ x dx)) (g x))
+       dx)))
+
+(define dx 0.00001)
+
+;;; deriv test
+(define (cube x) (* x x x))
+
+((deriv cube) 5)
+;; 75.00014999664018
