@@ -55,3 +55,25 @@
 
 ((deriv cube) 5)
 ;; 75.00014999664018
+
+
+(define (newton-transform g)
+  (lambda (x)
+    (- x (/ (g x) ((deriv g) x)))))
+
+(define (newtons-method g guess)
+  (fixed-point (newton-transform g) guess))
+
+(define (sqrt x)
+  (newtons-method (lambda (y) (- (square y) x))
+		  1.0))
+
+(sqrt 1)
+(sqrt 2)
+(sqrt 3)
+(sqrt 4)
+(sqrt 5)
+
+;; Abstractions and first-class procedures
+
+;; to be continued
