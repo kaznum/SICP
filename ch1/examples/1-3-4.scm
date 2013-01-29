@@ -75,5 +75,22 @@
 (sqrt 5)
 
 ;; Abstractions and first-class procedures
+(define (fixed-point-of-transform g transform guess)
+  (fixed-point (transform g) guess))
 
-;; to be continued
+;; average-damp sqrt
+(define (sqrt x)
+  (fixed-point-of-transform (lambda (y) (/ x y))
+			    average-damp
+			    1.0))
+
+(sqrt 5)
+
+;; Newton's method
+(define (sqrt x)
+  (fixed-point-of-transform (lambda (y) (- (square y) x))
+			    newton-transform
+			    1.0))
+(sqrt 5)
+
+
