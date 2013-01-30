@@ -3,9 +3,6 @@
 (define (average-damp f)
   (lambda (x) (average x (f x))))
 
-((average-damp square) 10)
-
-
 ;; definition of fixed-point
 (define tolerance 0.00001)
 
@@ -124,10 +121,12 @@
 
 (define (nth-rt n x)
   (fixed-point
-   (compose (repeated average-damp
-		      (floor (/ (log n) (log 2))))
-	    (lambda (y) (/ x (expt y (- n 1)))))
-    1.0))
+   ((repeated average-damp
+	      (floor (/ (log n) (log 2))))
+    (lambda (y) (/ x (expt y (- n 1)))))
+   1.0))
 
 (nth-rt 2 4)
-
+(nth-rt 3 8)
+(nth-rt 3 27)
+(nth-rt 5 32)
