@@ -132,5 +132,3 @@
 	(paint-right frame)))))
 
 ;; Levels of language for robust design
-
-;; to be continued
