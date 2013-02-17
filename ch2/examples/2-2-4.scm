@@ -123,7 +123,7 @@
 			      split-point
 			      (make-vect 0.0 1.0)))
 	  (paint-right
-	   (transform-painter painter1
+	   (transform-painter painter2
 			      split-point
 			      (make-vect 1.0 0.0)
 			      (make-vect 0.5 1.0))))
