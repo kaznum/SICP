@@ -60,17 +60,34 @@
 ;;
 ;; Answer b
 ;;
-(define (refine-parenthesis s)
-  (cond ((not (pair? s)) s)
-	((null? (cdr s)) (car s))
-	(else s)))
+;; DIRECTION.
+;;
+;; At first, separate the expression by '+ and parenthesize
+;;   both of elements which are separated.
+;;
+;; ex:
+;;   (1 + 2) + 3 * 4 * 5 + (6 + 7 * 8)
+;;   -> (1 + 2) + (3 * 4 * 5 + (6 + 7 * 8))
+;;   -> (1 + 2) + ((3 * 4 * 5) + (6 + 7 * 8))
+;;   -> (1 + 2) + ((3 * 4 * 5) + (6 + (7 * 8)))
+;;
+;; Second, Do the same thing by '*
+;; ex:
+;;   (1 + 2) + ((3 * 4 * 5) + (6 + (7 * 8)))
+;;   (1 + 2) + ((3 * (4 * 5)) + (6 + (7 * 8)))
+;;
+;; The result above is composed only with
+;;   the simple '1 operator and 2 components' expressions.
+;;
 
+;; no difference from ex2.58 a.
 (define (make-sum a1 a2)
   (cond ((=number? a1 0) a2)
 	((=number? a2 0) a1)
 	((and (number? a1) (number? a2)) (+ a1 a2))
 	(else (list a1 '+ a2))))
 
+;; no difference from ex2.58 a.
 (define (make-product m1 m2)
   (cond ((or (=number? m1 0) (=number? m2 0)) 0)
         ((=number? m1 1) m2)
@@ -78,6 +95,11 @@
         ((and (number? m1) (number? m2)) (* m1 m2))
         (else (list m1 '* m2))))
 
+
+(define (refine-parenthesis s)
+  (cond ((not (pair? s)) s)
+	((null? (cdr s)) (refine-parenthesis (car s)))
+	(else s)))
 
 (define (sum? x) (and (pair? x)
 		      (not (null? (filter (lambda (e) (eq? e '+)) x)))))
@@ -135,6 +157,8 @@
 (deriv '(2 * x + x) 'x)
 (deriv '(2 * x * x + x + 1) 'x)
 (deriv '(x * x + x + 2 * x) 'x)
+
+(deriv '(x * ((x + x)) + 2 * x) 'x)
 
 ;; The sample in the exercise explanation.
 (deriv '(x + 3 * (x + y + 2)) 'x)
