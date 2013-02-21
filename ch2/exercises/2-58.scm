@@ -23,7 +23,7 @@
           (make-product (deriv (multiplier exp) var)
                         (multiplicand exp))))
         (else
-         (error "unknown expression type -- DERIV" exp))))
+         (display exp)(error "unknown expression type -- DERIV" exp))))
 
 ;;
 ;; Answer a
@@ -60,3 +60,81 @@
 ;;
 ;; Answer b
 ;;
+(define (refine-parenthesis s)
+  (cond ((not (pair? s)) s)
+	((null? (cdr s)) (car s))
+	(else s)))
+
+(define (make-sum a1 a2)
+  (cond ((=number? a1 0) a2)
+	((=number? a2 0) a1)
+	((and (number? a1) (number? a2)) (+ a1 a2))
+	(else (list a1 '+ a2))))
+
+(define (make-product m1 m2)
+  (cond ((or (=number? m1 0) (=number? m2 0)) 0)
+        ((=number? m1 1) m2)
+        ((=number? m2 1) m1)
+        ((and (number? m1) (number? m2)) (* m1 m2))
+        (else (list m1 '* m2))))
+
+
+(define (sum? x) (and (pair? x)
+		      (not (null? (filter (lambda (e) (eq? e '+)) x)))))
+
+(define (product? x) (and (pair? x)
+			  (not (sum? x))
+			  (not (null? (filter (lambda (e) (eq? e '*)) x)))))
+
+(define (addend s)
+  (define (addend-list s)
+    (if (or (null? s) (eq? '+ (car s)))
+	'()
+	(cons (car s) (addend-list (cdr s)))))
+  (refine-parenthesis (addend-list s)))
+
+(define (augend s)
+  (define (augend-list s)
+    (cond ((null? s) '())
+	  ((eq? '+ (car s)) (cdr s))
+	  (else (augend-list (cdr s)))))
+  (refine-parenthesis (augend-list s)))
+
+(define (multiplier s) (refine-parenthesis (car s)))
+(define (multiplicand s)
+  (refine-parenthesis (cddr s)))
+
+;; TEST
+(sum? '(1 + 2))
+(sum? '(1 * 2 + 2))
+(sum? '(1 * 2 + (2 + 3)))
+(sum? '(1 * 2 * (2 + 3)))
+(product? '(1 + 2))
+(product? '(1 * 2 + 2))
+(product? '(1 * 2 + (2 + 3)))
+(product? '(1 * 2 * (2 + 3)))
+
+(addend '(1 + 2))
+(addend '(1 * 2 + 2))
+(addend '(1 * 2 + (2 + 3)))
+(augend '(1 + 2))
+(augend '(1 * 2 + 2))
+(augend '(1 * 2 + (2 + 3)))
+
+(multiplier '(1 * 2))
+(multiplicand '(1 * 2))
+(multiplier '((1 + 1) * 2 * 2))
+(multiplicand '((1 + 1) * 2 * 2))
+
+(deriv '(x + 3) 'x)
+(deriv '(x + x + x) 'x)
+(deriv 'x 'x)
+(deriv '(2 + x + x + x + 1) 'x)
+(deriv '(x * x) 'x)
+(deriv '(2 + x * x) 'x)
+(deriv '(2 * x + x) 'x)
+(deriv '(2 * x * x + x + 1) 'x)
+(deriv '(x * x + x + 2 * x) 'x)
+
+;; The sample in the exercise explanation.
+(deriv '(x + 3 * (x + y + 2)) 'x)
