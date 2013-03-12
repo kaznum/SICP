@@ -8,7 +8,5 @@
        (lambda (z x) (tag (add-complex-to-schemenum z x))))
   'done)
 
-;; Coercion
 
-;; to be continued
 
