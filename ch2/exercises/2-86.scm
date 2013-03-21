@@ -13,6 +13,7 @@
   (put 'sine 'rational
        (lambda (x) (attach-tag 'real (sine (/ (numer x) (denom x)))))))
 
+;; use numeric operators which are defined customly
 (define (install-complex-package)
   ;;...
   (define (add-complex z1 z2)
