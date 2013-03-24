@@ -4,7 +4,7 @@
   (and (variable? v1) (variable? v2) (eq? v1 v2)))
 
 ;; self defined
-(define (make-poly var iterms) (cons var items))
+(define (make-poly var items) (cons var items))
 (define (variable p) (car p))
 (define (term-list p) (cdr p))
 
