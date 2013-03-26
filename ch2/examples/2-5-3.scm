@@ -108,8 +108,3 @@
 (define (make-polynomial var terms)
   ((get 'make 'polynomial) var term))
 
-
-;; Hierarchies of types in symbolic algebra
-
-;; To be continued
-
