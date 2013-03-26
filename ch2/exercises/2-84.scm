@@ -16,8 +16,8 @@
   (define (find-proc-args op a1 a2)
     (let ((type1 (type-tag a1))
 	  (type2 (type-tag a2)))
-      (let ((proc1 (get op type1 type2))
-	    (proc2 (get op type2 type1)))
+      (let ((proc1 (get op (list type1 type2)))
+	    (proc2 (get op (list type2 type1))))
 	(cond (proc1 (list proc1 a1 a2))
 	      (proc2 (list proc2 a2 a1))
 	      ((get 'raise a1)
@@ -33,7 +33,7 @@
 	  (if (= (length args) 2)
 	      (let ((a1 (car args))
 		    (a2 (cadr args)))
-		(let (proc-args (find-proc-args op a1 a2))
+		(let ((proc-args (find-proc-args op a1 a2)))
 		  (if proc-args
 		      ((car proc-args) (cadr proc-args) (caddr proc-args))
 		      (error "No method for these types"
