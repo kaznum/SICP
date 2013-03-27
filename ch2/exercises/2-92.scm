@@ -1,12 +1,73 @@
-(define (attach-tag t cont) (cons t cont))  ;; defined in ch2.4.3
-(define get 2d-get)  ;; from ex2.73
-(define put 2d-put!)  ;; from ex2.73
+;; defined in ch2.4.3
+(define (attach-tag t cont) (cons t cont))
+
+
+(define (get x-key y-key)
+  (let ((1d-table (2d-get-alist-x x-key)))
+    (let ((type-f (assoc y-key 1d-table)))
+      (if type-f (cdr type-f) false))))
+(define put 2d-put!)
+
+(define (contents x)
+  (cond ((pair? x) (cdr x))
+	((number? x) x)
+	(else (error "Not supported" x))))
+
+
 (define (apply-generic op . args)
+  (define (find-proc-args op a1 a2)
+    (let ((type1 (type-tag a1))
+	  (type2 (type-tag a2)))
+      (let ((proc1 (get op (list type1 type2)))
+	    (proc2 (get op (list type2 type1))))
+	(cond (proc1 (list proc1 a1 a2))
+	      (proc2 (list proc2 a2 a1))
+	      ((and (get 'raise type1) (get 'raise type2))
+	       (or (find-proc-args op ((get 'raise type1) a1) a2) (find-proc-args op a1 ((get 'raise type2) a2))))
+	      ((get 'raise type1)
+	       (find-proc-args op ((get 'raise type1) a1) a2))
+	      ((get 'raise type2)
+	       (find-proc-args op a1 ((get 'raise type2) a2)))
+	      (else #f)))))
   (let ((type-tags (map type-tag args)))
     (let ((proc (get op type-tags)))
       (if proc
-          (apply proc (map contents args))
-          (apply-each-types args type-tags)))))
+	  (apply proc (map contents args))
+	  (if (= (length args) 2)
+	      (let ((a1 (car args))
+		    (a2 (cadr args)))
+		(let ((proc-args (find-proc-args op a1 a2)))
+		  (if proc-args
+		      ((car proc-args) (contents (cadr proc-args)) (contents (caddr proc-args)))
+		      (error "No method for these types"
+			     (list op type-tags)))))
+	      (error "No method for these types"
+		     (list op type-tags)))))))
+
+(define (type-tag x)
+  (cond ((pair? x) (car x))
+	((number? x) 'scheme-number)
+	(else (error "No type defined - TYPE-TAG" x))))
+
+(define (install-scheme-number-package)
+  (define (tag x)
+    (attach-tag 'scheme-number x))
+  (put 'add '(scheme-number scheme-number)
+       (lambda (x y) (+ x y)))
+  (put 'sub '(scheme-number scheme-number)
+       (lambda (x y) (- x y)))
+  (put 'mul '(scheme-number scheme-number)
+       (lambda (x y) (* x y)))
+  (put 'div '(scheme-number scheme-number)
+       (lambda (x y) (/ x y)))
+  (put '=zero? '(scheme-number)
+       (lambda (x) (= x 0)))
+  (put 'make 'scheme-number
+       (lambda (x) x))
+  'done)
+
+(define (make-scheme-number n)
+  ((get 'make 'scheme-number) n))
 
 ;; Given in the section 2.5.3
 (define (install-polynomial-package)
@@ -63,26 +124,42 @@
 	(the-empty-termlist)
 	(let ((t2 (first-term L)))
 	  (adjoin-term
-	   (make-term (+ (order t1) (order t2))
+	   (make-term (add (order t1) (order t2))
 		      (mul (coeff t1) (coeff t2)))
 	   (mul-term-by-all-terms t1 (rest-terms L))))))
 
-
   (define (add-poly p1 p2)
-    (if (same-variable? (variable p1) (variable p2))
-	(make-poly (variable p1)
-		   (add-terms (term-list p1)
-			      (term-list p2)))
-	(error "Polys not in same var -- ADD-POLY"
-	       (list p1 p2))))
+    (let ((var1 (variable p1))
+	  (var2 (variable p2)))
+      (cond ((eq? var1 var2)
+	     (make-poly var1
+			(add-terms (term-list p1)
+				   (term-list p2))))
+	    ((eq? var1 'none)
+	     (add-poly p2 (make-poly var2 (term-list p1))))
+	    ((eq? var2 'none)
+	     (add-poly p1 (make-poly var1 (term-list p2))))
+	    (else
+	     (add-poly p1
+		       (make-poly var1
+				  (adjoin-term (make-term 0 (tag p2)) (the-empty-termlist))))))))
 
   (define (mul-poly p1 p2)
-    (if (same-variable? (variable p1) (variable p2))
-	(make-poly (variable p1)
-		   (mul-terms (term-list p1)
-			      (term-list p2)))
-	(error "Polys not in same var -- MUL-POLY"
-	       (list p1 p2))))
+    (let ((var1 (variable p1))
+	  (var2 (variable p2)))
+      (cond ((eq? var1 var2)
+	     (make-poly var1
+			(mul-terms (term-list p1)
+				   (term-list p2))))
+	    ((eq? var1 'none)
+	     (mul-poly p2 (make-poly var2 (term-list p1))))
+	    ((eq? var2 'none)
+	     (mul-poly p1 (make-poly var1 (term-list p2))))
+	    (else
+	     (mul-poly p1
+		       (make-poly var1
+				  (adjoin-term (make-term 0 (tag p2)) (the-empty-termlist))))))))
+
 
   ;; interface to rest of the system
   (define (tag p) (attach-tag 'polynomial p))
@@ -92,51 +169,41 @@
        (lambda (p1 p2) (tag (mul-poly p1 p2))))
   (put 'make 'polynomial
        (lambda (var terms) (tag (make-poly var terms))))
+  (put '=zero? '(polynomial)
+       (lambda (p) (empty-termlist? (term-list p))))
   'done)
 
+(define (make-polynomial variable term-list)
+  ((get 'make 'polynomial) variable term-list))
 
-;; Answer
-;; This answer limits that there are only two kinds of variable, 'x and 'y.
-;;
-;; define the selector of variable-ordering
-(define (variable-order var)  (if (eq var 'x) 1 0))
+(put 'raise 'scheme-number
+     (lambda (n) (make-polynomial 'none (list (list 0 n)))))
 
-;; Replace add-poly in polynomial package
-(define (install-polynomial-package)
-  ;;...
-  (define (add-poly p1 p2)
-    (let ((var1 (variable p1))
-	  (var2 (variable p2)))
-      (let ((var-order1 (variable-order var1))
-	    (var-order2 (variable-order var2))
-	(cond ((= var-order1 var-order2)
-	       (make-poly var1
-			  (add-terms (term-list p1)
-				     (term-list p2))))
-	      ((= var-order1 1)
-	       (add-poly p1
-			 (make-poly var1
-				    (list (make-term 0 (tag p2))))))
-	      (else
-	       (add-poly p2
-			 (make-poly var2
-				    (list (make-term 0 (tag p1)))))))))))
+;; TEST
+(install-scheme-number-package)
+(install-polynomial-package)
 
-  (define (mul-poly p1 p2)
-    (let ((var1 (variable p1))
-	  (var2 (variable p2)))
-      (let ((var-order1 (variable-order var1))
-	    (var-order2 (variable-order var2))
-	(cond ((= var-order1 var-order2)
-	       (make-poly var1
-			  (mul-terms (term-list p1)
-				     (term-list p2))))
-	      ((= var-order1 1)
-	       (mul-poly p1
-			 (make-poly var1
-				    (list (make-term 0 (tag p2))))))
-	      (else
-	       (mul-poly p2
-			 (make-poly var2
-				    (list (make-term 0 (tag p1))))))))))))
+
+(define (add p1 p2) (apply-generic 'add p1 p2))
+(define (mul p1 p2) (apply-generic 'mul p1 p2))
+(define (=zero? p1) (apply-generic '=zero? p1))
+
+(add 1 2)
+(mul 3 2)
+(add (make-polynomial 'x '((3 2) (2 1))) (make-polynomial 'x '((5 3) (2 2))))
+(add (make-polynomial 'x '((3 2) (2 1))) 3)
+(add 3 (make-polynomial 'x '((3 2) (2 1))))
+(add (make-polynomial 'x '((3 2) (2 1))) (make-polynomial 'x '((5 3) (2 2))))
+(add (make-polynomial 'x '((3 2))) (make-polynomial 'x '((5 3) (3 1))))
+
+(mul (make-polynomial 'x '((3 2) (1 1))) (make-polynomial 'x '((6 3) (2 2))))
+(mul (make-polynomial 'x '((3 2) (1 1))) (make-polynomial 'x '((2 3) (0 2))))
+
+(add (make-polynomial 'x '((3 2) (2 1))) (make-polynomial 'y '((5 3) (2 2))))
+(add (make-polynomial 'y '((3 2) (2 1))) (make-polynomial 'x '((5 3) (2 2))))
+(mul (make-polynomial 'x '((3 2) (1 1))) (make-polynomial 'y '((2 3) (0 2))))
+(mul (make-polynomial 'x '((3 2))) (make-polynomial 'y '((2 3))))
+(mul 3 (make-polynomial 'x '((2 3) (0 2))))
+(mul (make-polynomial 'x '((2 3) (0 2))) 3)
+
 
