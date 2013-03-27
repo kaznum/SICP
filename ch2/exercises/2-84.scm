@@ -20,11 +20,12 @@
 	    (proc2 (get op (list type2 type1))))
 	(cond (proc1 (list proc1 a1 a2))
 	      (proc2 (list proc2 a2 a1))
-	      ((get 'raise a1)
-	       (let ((raised-proc-args (find-proc-args (get'raise a1) a2)))
-		 (if raised-proc-args
-		     raised-proc-args
-		     (find-proc-args a1 (get'raise a2)))))
+	      ((and (get 'raise type1) (get 'raise type2))
+	       (or (find-proc-args op ((get 'raise type1) a1) a2) (find-proc-args op a1 ((get 'raise type2) a2))))
+	      ((get 'raise type1)
+	       (find-proc-args op ((get 'raise type1) a1) a2))
+	      ((get 'raise type2)
+	       (find-proc-args op a1 ((get 'raise type2) a2)))
 	      (else #f)))))
   (let ((type-tags (map type-tag args)))
     (let ((proc (get op type-tags)))
@@ -35,7 +36,7 @@
 		    (a2 (cadr args)))
 		(let ((proc-args (find-proc-args op a1 a2)))
 		  (if proc-args
-		      ((car proc-args) (cadr proc-args) (caddr proc-args))
+		      ((car proc-args) (contents (cadr proc-args)) (contents (caddr proc-args)))
 		      (error "No method for these types"
 			     (list op type-tags)))))
 	      (error "No method for these types"
