@@ -9,7 +9,7 @@
 		  (new-o (- (order t1) (order t2))))
 	      (let ((rest-of-result
 		     (div-terms
-		      (add-terms L1 (negate (mul-terms L2 (make-term new-o new-c)))) L2)))
+		      (add-terms L1 (negate (mul-terms L2 (list (make-term new-o new-c))))) L2)))
 		(list (adjoin-term (make-term new-o new-c) (car rest-of-result))
 		      (cadr rest-of-result))))))))
 
