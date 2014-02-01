@@ -1,10 +1,13 @@
 (define (counted? exp pairs)
   (any (lambda (x) (eq? exp x)) pairs))
 
+(define (add-to-ident-pairs exp pairs)
+  (cons exp pairs))
+
 (define (ident-pairs exp pairs)
   (if (or (not (pair? exp)) (counted? exp pairs))
       pairs
-      (let ((new-pairs (cons exp pairs)))
+      (let ((new-pairs (add-to-ident-pairs exp pairs)))
 	(ident-pairs (car exp) (ident-pairs (cdr exp) new-pairs)))))
 
 (define (count-pairs x)
