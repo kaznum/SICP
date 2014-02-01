@@ -2,17 +2,21 @@
 (define y '(e f))
 (set-car! x y)
 x
+;Value 2: ((e f) c d)
 
 (define x '((a b) c d))
 (define y '(e f))
 (define z (cons y (cdr x)))
 z
+;Value 3: ((e f) c d)
+
 
 (define x '((a b) c d))
 (define y '(e f))
 
 (set-cdr! x y)
 x
+;Value 4: ((a b) e f)
 
 (define (cons2 x y)
   (let ((new (get-new-pair)))
