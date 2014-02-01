@@ -49,6 +49,20 @@ z2
 (set-to-wow! z2)
 ;; ((wow b) a b)
 
+
+(define x (list 'a 'b))
+(define z1 (cons x x))
+(define z2 (cons (list 'a 'b) (list 'a 'b)))
+(define z3 z1)
+(eq? z1 z2)
+;Value: #f
+(eq? z1 z3)
+;Value: #t
+(eq? (car z1) (cdr z1))
+;Value: #t
+(eq? (car z2) (cdr z2))
+;Value: #f
+
 ;; Mutation is just assignment
 
 ;; to be continued
