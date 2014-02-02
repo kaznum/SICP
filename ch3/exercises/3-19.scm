@@ -12,8 +12,6 @@
 	 (or (occur-again? me (car exp))
 	     (occur-again? me (cdr exp))
 	     (occur-again? (car me) (car exp))
-	     (occur-again? (cdr me) (car exp))
-	     (occur-again? (car me) (cdr exp))
 	     (occur-again? (cdr me) (cdr exp))))))
 
 (define (loop-exists? exp)
