@@ -64,6 +64,37 @@ z2
 ;Value: #f
 
 ;; Mutation is just assignment
+(define (cons x y)
+  (define (set-x! v) (set! x v))
+  (define (set-y! v) (set! y v))
+  (define (dispatch m)
+    (cond ((eq? m 'car) x)
+	  ((eq? m 'cdr) y)
+	  ((eq? m 'set-car!) set-x!)
+	  ((eq? m 'set-cdr!) set-y!)
+	  (else (error "Undefined operation -- CONS" m))))
+  dispatch)
+(define (car z) (z 'car))
+(define (cdr z) (z 'cdr))
+(define (set-car! z new-value)
+  ((z 'set-car!) new-value)
+  z)
+(define (set-cdr! z new-value)
+  ((z 'set-cdr!) new-value)
+  z)
+
+(define x (cons 'a 'b))
+(car x)
+;Value: a
+(cdr x)
+;Value: b
+(set-car! x 'c)
+(car x)
+;Value: c
+(set-cdr! x 'd)
+(cdr x)
+;Value: d
+
 
 ;; to be continued
 
