@@ -33,6 +33,3 @@
 (loop-exists? p2)
 ;Value: #t
 
-
-
-
