@@ -6,16 +6,21 @@
 	((not (pair? exp)) false)
 	((null? me) false)
 	((null? exp) false)
-	((eq? me (car exp)) true)
-	((eq? me (cdr exp)) true)
+	((eq? me exp) true)
 	(else
-	 (or (occur-again? me (car exp))
-	     (occur-again? me (cdr exp))
-	     (occur-again? (car me) (car exp))
-	     (occur-again? (cdr me) (cdr exp))))))
+	 (or
+	  (occur-again? me (car exp))
+	  (occur-again? me (cdr exp))
+	  (loop-exists? (car me))
+	  (loop-exists? (cdr me))))))
 
 (define (loop-exists? exp)
-  (or (occur-again? exp (car exp)) (occur-again? exp (cdr exp))))
+  (cond ((not (pair? exp)) false)
+	((null? exp) false)
+	(else
+	 (or
+	  (occur-again? exp (car exp))
+	  (occur-again? exp (cdr exp))))))
 
 
 (loop-exists? '(a b c d))
@@ -34,5 +39,14 @@
 (loop-exists? p2)
 ;Value: #f
 (set-car! (cdr p2) p2)
+
 (loop-exists? p2)
 ;Value: #t
+
+
+;; TODO
+;; This becomes infinite loop
+;; When the elements (not the first element) is refered by the end of the list
+(define x (list 'a 'b))
+(set-cdr! (cdr x) (cdr x))
+(loop-exists? x)
