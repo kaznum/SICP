@@ -94,7 +94,3 @@ z2
 (set-cdr! x 'd)
 (cdr x)
 ;Value: d
-
-
-;; to be continued
-
