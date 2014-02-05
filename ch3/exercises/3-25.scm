@@ -14,18 +14,16 @@
       (iter keys local-table))
 
     (define (insert! keys value)
-      (define (iter ks table)
-	(let* ((key (car ks))
-	       (v (assoc key (cdr table))))
-	  (if v
-	      (if (null? (cdr ks))
-		  (set-cdr! v value)
-		  (iter (cdr ks) v))
-	      (if (null? (cdr ks))
-		  (set-cdr! table (cons (cons key value) (cdr table)))
-		  (let ((new-table (cons key '())))
-		    (set-cdr! table (cons new-table (cdr table)))
-		    (iter (cdr ks) new-table))))))
+      (define (iter ks t)
+	(if (null? ks)
+	    (set-cdr! t value)
+	    (let* ((key (car ks))
+		   (associated (assoc key (cdr t))))
+	      (if associated
+		  (iter (cdr ks) associated)
+		  (let ((new-entry (cons key '())))
+		    (set-cdr! t (cons new-entry (cdr t)))
+		    (iter (cdr ks) new-entry))))))
       (iter keys local-table)
       'ok)
 
@@ -69,3 +67,8 @@
 ;;2
 (get '(sub2 c x))
 ;;#f
+;;; update
+(put '(sub2 d p) 3)
+(get '(sub2 d p))
+;;3
+
