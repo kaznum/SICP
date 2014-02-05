@@ -59,7 +59,7 @@
 
 (define (make-table)
   (let ((local-table (list '*table*)))
-    (define (lookup key-1 key2)
+    (define (lookup key-1 key-2)
       (let ((subtable (assoc key-1 (cdr local-table))))
     (if subtable
 	(let ((record (assoc key-2 (cdr subtable))))
