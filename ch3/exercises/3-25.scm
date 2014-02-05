@@ -14,18 +14,22 @@
       (iter keys local-table))
 
     (define (insert! keys value)
+      (define (find-or-create-associated ks t)
+	(let* ((key (car ks))
+	       (associated (assoc key (cdr t))))
+	  (if associated
+	      associated
+	      (let ((new-entry (cons key '())))
+		(set-cdr! t (cons new-entry (cdr t)))
+		new-entry))))
+
       (define (iter ks t)
 	(if (null? ks)
-	    (set-cdr! t value)
-	    (let* ((key (car ks))
-		   (associated (assoc key (cdr t))))
-	      (if associated
-		  (iter (cdr ks) associated)
-		  (let ((new-entry (cons key '())))
-		    (set-cdr! t (cons new-entry (cdr t)))
-		    (iter (cdr ks) new-entry))))))
-      (iter keys local-table)
-      'ok)
+	    (begin
+	      (set-cdr! t value)
+	      'ok)
+	    (iter (cdr ks) (find-or-create-associated ks t))))
+      (iter keys local-table))
 
     (define (dispatch m)
       (cond ((eq? m 'lookup-proc) lookup)
