@@ -34,10 +34,15 @@
 
 (define (ripple-carry-adder as bs ss c)
   (let ((c-in (make-wire)))
-    (if (null? as)
-	(set-signal! c-in 0)
-	(ripple-carry-adder (cdr as) (cdr bs) (cdr ss) c))
-    (full-adder c-in (car as) (car bs) (car ss) c)))
+    (and (not (null? as))
+	 (ripple-carry-adder (cdr as) (cdr bs) (cdr ss) c-in))
+    (full-adder c-in (car as) (car bs) (car ss) c)
+    (and (null? as)
+	 (set-signal! c-in 0))))
+
+;;; They cannot be tried
+;;; because there are no definitions of make-wire/and-gear/or-gear/inverter yet.
+
 
 ;; full-adder is called n times
 ;; The delay is
@@ -48,4 +53,3 @@
 ;;  + 2 * inverter-delay
 ;;  + 3 * or-delay)
 
-;; to be continued
