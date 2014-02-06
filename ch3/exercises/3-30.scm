@@ -34,11 +34,13 @@
 
 (define (ripple-carry-adder as bs ss c)
   (let ((c-in (make-wire)))
-    (and (not (null? as))
-	 (ripple-carry-adder (cdr as) (cdr bs) (cdr ss) c-in))
-    (full-adder c-in (car as) (car bs) (car ss) c)
-    (and (null? as)
-	 (set-signal! c-in 0))))
+    (if (null? as)
+	;;; When add-action! is called, the action to be added will be run.
+	;;;  So set the initial signal in advance.
+	;;;  This explanation is in the following section and ex3.31
+	(set-signal! c-in 0)
+	(ripple-carry-adder (cdr as) (cdr bs) (cdr ss) c-in))
+    (full-adder c-in (car as) (car bs) (car ss) c)))
 
 ;;; They cannot be tried
 ;;; because there are no definitions of make-wire/and-gear/or-gear/inverter yet.
