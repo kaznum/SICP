@@ -1,4 +1,4 @@
-;;; xor = not . and
+;;; xor = half-adder
 
 (define (xor-gate a b output)
   (let ((w (make-wire))
