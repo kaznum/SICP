@@ -126,7 +126,7 @@
 (define carry (make-wire))
 (probe 'sum sum)
 ;; executed probe
-(probe carry carry)
+(probe 'carry carry)
 ;; executed probe
 
 (half-adder input-1 input-2 sum carry)
