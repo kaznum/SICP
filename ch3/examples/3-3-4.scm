@@ -70,7 +70,7 @@
     (define (dispatch m)
       (cond ((eq? m 'get-signal) signal-value)
 	    ((eq? m 'set-signal!) set-my-signal!)
-	    ((eq? m add-action!) accept-action-procedure!)
+	    ((eq? m 'add-action!) accept-action-procedure!)
 	    (else (error "Unknown operation -- WIRE" m))))
     dispatch))
 
@@ -90,7 +90,7 @@
 
 ;;; The agenda
 (define (after-delay delay action)
-  (add-to-agenda! (+ delay (current-time (the-agenda)))
+  (add-to-agenda! (+ delay (current-time the-agenda))
 		  action
 		  the-agenda))
 
