@@ -14,32 +14,32 @@
 
 ;;; Using the constraint system
 
-(define C (make-connector))
-(define F (make-connector))
-(celsius-fahrenheit-converter C F)
+;; (define C (make-connector))
+;; (define F (make-connector))
+;; (celsius-fahrenheit-converter C F)
 
-(define (celsius-fahrenheit-converter c f)
-  (let ((u (make-connector))
-	(v (make-connector))
-	(w (make-connector))
-	(x (make-connector))
-	(y (make-connector)))
-    (multiplier c w u)
-    (multiplier v x u)
-    (adder v y f)
-    (constant 9 w)
-    (constant 5 x)
-    (constant 32 y)
-    'ok))
+;; (define (celsius-fahrenheit-converter c f)
+;;   (let ((u (make-connector))
+;; 	(v (make-connector))
+;; 	(w (make-connector))
+;; 	(x (make-connector))
+;; 	(y (make-connector)))
+;;     (multiplier c w u)
+;;     (multiplier v x u)
+;;     (adder v y f)
+;;     (constant 9 w)
+;;     (constant 5 x)
+;;     (constant 32 y)
+;;     'ok))
 
-(probe "Celsius temp" C)
-(probe "Fahrenheit temp" F)
+;; (probe "Celsius temp" C)
+;; (probe "Fahrenheit temp" F)
 
-(set-value! C 25 'user)
-(set-value! F 212 'user) ;; error
+;; (set-value! C 25 'user)
+;; (set-value! F 212 'user) ;; error
 
-(forget-value! C 'user)
-(set-value! F 212 'user) ;; no error
+;; (forget-value! C 'user)
+;; (set-value! F 212 'user) ;; no error
 
 ;;; Implementing the constraint system
 (define (adder a1 a2 sum)
@@ -170,10 +170,59 @@
       (cond ((eq? request 'has-value?)
 	     (if informant true false))
 	    ((eq? request 'value) value)
+	    ((eq? request 'forget) forget-my-value)
 	    ((eq? request 'set-value!) set-my-value)
 	    ((eq? request 'connect) connect)
 	    (else (error "Unknown operation -- CONNECTOR" request))))
     me))
 
+(define (for-each-except exception procedure list)
+  (define (loop items)
+    (cond ((null? items) 'done)
+	  ((eq? (car items) exception) (loop (cdr items)))
+	  (else (procedure (car items))
+		(loop (cdr items)))))
+  (loop list))
 
-;; to be continued
+(define (has-value? connector)
+  (connector 'has-value?))
+
+(define (get-value connector)
+  (connector 'value))
+
+(define (set-value! connector new-value informant)
+  ((connector 'set-value!) new-value informant))
+
+(define (forget-value! connector retractor)
+  ((connector 'forget) retractor))
+
+(define (connect connector new-constraint)
+  ((connector 'connect) new-constraint))
+
+;;; The following code comes from the top of this section.
+(define (celsius-fahrenheit-converter c f)
+  (let ((u (make-connector))
+	(v (make-connector))
+	(w (make-connector))
+	(x (make-connector))
+	(y (make-connector)))
+    (multiplier c w u)
+    (multiplier v x u)
+    (adder v y f)
+    (constant 9 w)
+    (constant 5 x)
+    (constant 32 y)
+    'ok))
+
+(define C (make-connector))
+(define F (make-connector))
+(celsius-fahrenheit-converter C F)
+
+(probe "Celsius temp" C)
+(probe "Fahrenheit temp" F)
+
+(set-value! C 25 'user)
+(set-value! F 212 'user) ;; error
+
+(forget-value! C 'user)
+(set-value! F 212 'user) ;; no error
