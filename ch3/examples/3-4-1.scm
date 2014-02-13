@@ -7,5 +7,3 @@
 
 ;;; Correct behavior of concurrent programs
 
-;; to be continued
-
