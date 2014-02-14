@@ -1,0 +1,2 @@
+;; The procedure 'exchange' is implemented with the procedures 'deposit', 'withdraw'.
+;; Under the situation where 'deposit' and 'withdraw' are serialized in make-account, when serialized-exchange is called, other procedures which are serialized in the same serializer are blocked to process, which means that a deadlock happens at the points where deposit and withdraw inside of serialized-exchange are called.
