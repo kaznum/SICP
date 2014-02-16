@@ -95,5 +95,3 @@
 ;; Deadlock
 
 ;; Concurrency, time, and communication
-
-;; to be continued
