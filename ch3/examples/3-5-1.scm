@@ -70,5 +70,13 @@ stream-for-each
 
 
 ;;; Implementing delay and force
-
-;; to be continued
+;; (define (force delayed-object) (delayed-object))
+;; (define (memo-proc proc)
+;;   (let ((already-run? false)
+;; 	(result false))
+;;     (lambda ()
+;;       (if (not already-run?)
+;; 	  (begin (set! result (proc))
+;; 		 (set! already-run? true)
+;; 		 result)
+;; 	  result))))
