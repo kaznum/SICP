@@ -3,7 +3,7 @@
    (quotient (* num radix) den)
    (expand (remainder (* num radix) den) den radix)))
 
-;; This is the digits of num/den when num is smaller than den
+;; This is the digits of num/den when num is smaller than den whose cardinal number is radix
 
 ;; (expand 1 7 10)
 ;; 1: (quotient (* 1 10) 7) = 1
