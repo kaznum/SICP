@@ -8,9 +8,8 @@
 (define (triples s t u)
   (cons-stream (list (stream-car s) (stream-car t) (stream-car u))
 	       (interleave
-		(stream-map (lambda (x) (cons (stream-car s) x))
-			    (stream-map (lambda (y) (list (stream-car t) y))
-					(stream-cdr u)))
+		(stream-map (lambda (x) (list (stream-car s) (stream-car t) x))
+			    (stream-cdr u))
 		(interleave
 		 (stream-map (lambda (x) (cons (stream-car s) x))
 			     (pairs (stream-cdr t) (stream-cdr u)))
