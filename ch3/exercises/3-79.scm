@@ -25,7 +25,7 @@
 
 
 ;; for (f(dy/dt, y) = y)
-;;  this means y = exp^y
+;;  this means y = exp^t
 ;; y0 = 1
 ;; dy0 = 1
 
