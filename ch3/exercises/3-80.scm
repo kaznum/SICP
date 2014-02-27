@@ -23,17 +23,14 @@
     (define vC
       (integral (delay dvC) vC0 dt))
     (define diL
-      (add-streams (scale-stream vC (/ 1 L)) (scale-stream iL (/ (* -1 R) L))))
+      (add-streams (scale-stream vC (/ 1 L)) (scale-stream iL (- (/ R L)))))
     (cons vC iL)))
 
 
 
 ;; TEST
 (define RLC1 (RLC 1 1 0.2 0.1))
-
-(define (integers-from n)
-  (cons-stream n (integers-from (+ n 1))))
-(define integers (integers-from 1))
+(define vL-iL (RLC1 10 0))
 
 (define (show-vi-stream vi n)
   (if (zero? n)
@@ -44,8 +41,6 @@
 	  (newline)
 	  (display (cons (stream-car v) (stream-car i)))
 	  (show-vi-stream (cons (stream-cdr v) (stream-cdr i)) (- n 1))))))
-
-(define vL-iL (RLC1 10 0))
 
 (show-vi-stream vL-iL 10)
 
@@ -59,4 +54,3 @@
 ;; (1.8519299999999999 . 3.834181)
 ;; (-.0651605000000004 . 3.6359559)
 ;; (-1.8831384500000004 . 3.2658442599999997)
-
