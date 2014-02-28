@@ -41,5 +41,31 @@
 (stream-ref pi 100000)
 
 ;;; A functional-programming view of time
+(define (make-simplified-withdraw balance)
+  (lambda (amount)
+    (set! balance (- balance amount))
+    balance))
 
-;; to be continued
+(define simple-withdraw (make-simplified-withdraw 1000))
+(simple-withdraw 200)
+;; 800
+(simple-withdraw 300)
+;; 500
+
+(define (stream-withdraw balance amount-stream)
+  (cons-stream
+   balance
+   (stream-withdraw (- balance (stream-car amount-stream))
+		    (stream-cdr amount-stream))))
+
+(define amounts
+  (cons-stream 200
+	       (stream-map (lambda (x) (+ 100 x)) amounts)))
+
+(define balances (stream-withdraw 1000 amounts))
+(stream-ref balances 0)
+;; 1000
+(stream-ref balances 1)
+;; 800
+(stream-ref balances 2)
+;; 500
