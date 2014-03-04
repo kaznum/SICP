@@ -72,5 +72,3 @@
 ;;     (eval (definition-value exp) env)
 ;;     env)
 ;;   'ok)
-
-;; to be continued
