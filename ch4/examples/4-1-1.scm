@@ -1,3 +1,5 @@
+;;; eval
+
 ;; (define (eval exp env)
 ;;   (cond ((self-evaluating? exp) exp)
 ;; 	((variable? exp) (lookup-variable-value exp env))
@@ -17,6 +19,8 @@
 ;; 	(else
 ;; 	 (error "Unknown expression type: EVAL" exp))))
 
+;;; Apply
+
 ;; (define (apply procedure arguments)
 ;;   (cond ((primitive-procedure? procedure)
 ;; 	 (apply-primitive-procedure procedure arguments))
@@ -31,5 +35,21 @@
 ;; 	 (error
 ;; 	  "Unknown procedure type: APPLY" procedure))))
 
+;;; Procedure arguments
+
+;; (define (list-of-values exps env)
+;;   (if (no-operands? exps)
+;;       '()
+;;       (cons (eval (first-operand exps) env)
+;; 	    (list-of-values (rest-operands exps) env))))
+
+;;; Conditionals
+
+;; (define (eval-if exp env)
+;;   (if (true? (eval (if-predicate exp) env))
+;;       (eval (if-consequent exp) env)
+;;       (eval (if-alternative exp) env)))
+
+;;; Sequences
 
 ;; to be continued
