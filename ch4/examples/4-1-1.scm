@@ -3,7 +3,7 @@
 ;; (define (eval exp env)
 ;;   (cond ((self-evaluating? exp) exp)
 ;; 	((variable? exp) (lookup-variable-value exp env))
-;; 	((quoted? exp) (text-of_quotation exp))
+;; 	((quoted? exp) (text-of-quotation exp))
 ;; 	((assignment? exp) (eval-assignment exp env))
 ;; 	((definition? exp) (eval-definition exp env))
 ;; 	((if? exp) (eval-if exp env))
