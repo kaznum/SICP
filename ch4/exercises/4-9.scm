@@ -193,7 +193,7 @@
   (sequence->exp
    (list (list 'define (list 'iter)
 	       (make-if (while-predicate exp)
-			(sequence->exp (while-body exp))
+			(while-body exp)
 			'true))
 	 (list 'iter))))
 
