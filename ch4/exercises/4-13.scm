@@ -66,7 +66,7 @@
 ;; The unbinding should be only in the first frame because
 ;; enclosing environment is refered by other frames and
 ;; unbinding definition might be dangerous, on the other hand,
-;; assingment can be done even the varialbles in the enclosing envs.
+;; assingment can be done even to the varialbles in the enclosing envs.
 ;; So the following code unbinds the definition of variable even in
 ;; the enclosing envs.
 ;;
