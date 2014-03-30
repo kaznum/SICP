@@ -317,7 +317,7 @@
 
 ;; Changed to support delay
 (define (delay? exp) (tagged-list? exp 'delay))
-
+(define (delayed? exp) (tagged-list? exp 'delayed))
 (define (lookup-variable-value var env)
   (define (env-loop env)
     (define (scan vars vals)
@@ -326,11 +326,11 @@
 	    ((eq? var (car vars))
 	     (let ((val (car vals)))
 	       (cond ((eq? val '*unassigned*)
-		    ;; (error "value is *unassigned* : " var)
-		    (list 'delay var))
-		   ((and (pair? val) (eq? (car val) 'delayed))
-		    (eval (cdr val) env))
-		   (else val))))
+		      ;; (error "value is *unassigned* : " var)
+		      (list 'delay var))
+		     ((and (pair? val) (delayed? val))
+		      (eval (cdr val) env))
+		     (else val))))
 	    (else (scan (cdr vars) (cdr vals)))))
     (if (eq? env the-empty-environment)
 	(error "Unbound variable" var)
