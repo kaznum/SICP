@@ -46,6 +46,9 @@
 	(else
 	 (error "Unknown expression type: EVAL" exp))))
 
+(define (make-variable-delay var)
+  (list 'delay var))
+
 (define (make-delayed-value exp)
   (append (list 'delayed (operator exp))
 	  (map (lambda (x) (if (delay? x) (cadr x) x))
@@ -317,7 +320,10 @@
 
 ;; Changed to support delay
 (define (delay? exp) (tagged-list? exp 'delay))
-(define (delayed? exp) (tagged-list? exp 'delayed))
+(define (delayed? exp)
+  (and (pair? exp)
+       (tagged-list? exp 'delayed)))
+
 (define (lookup-variable-value var env)
   (define (env-loop env)
     (define (scan vars vals)
@@ -327,8 +333,8 @@
 	     (let ((val (car vals)))
 	       (cond ((eq? val '*unassigned*)
 		      ;; (error "value is *unassigned* : " var)
-		      (list 'delay var))
-		     ((and (pair? val) (delayed? val))
+		      (make-variable-delay var))
+		     ((delayed? val)
 		      (eval (cdr val) env))
 		     (else val))))
 	    (else (scan (cdr vars) (cdr vals)))))
