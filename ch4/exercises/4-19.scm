@@ -323,6 +323,8 @@
 (define (delayed? exp)
   (and (pair? exp)
        (tagged-list? exp 'delayed)))
+(define (delayed-body exp)
+  (cdr exp))
 
 (define (lookup-variable-value var env)
   (define (env-loop env)
@@ -335,7 +337,7 @@
 		      ;; (error "value is *unassigned* : " var)
 		      (make-variable-delay var))
 		     ((delayed? val)
-		      (eval (cdr val) env))
+		      (eval (delayed-body val) env))
 		     (else val))))
 	    (else (scan (cdr vars) (cdr vals)))))
     (if (eq? env the-empty-environment)
@@ -391,3 +393,22 @@
 (define (make-procedure parameters body env)
   (list 'procedure parameters (reorder-definitions body) env))
 
+;;;; TEST
+;; 1 ]=> (driver-loop)
+;; ;;; M-Eval input:
+;; (define (m)
+;; (let ((a 1))
+;; (define (f x)
+;; (define b (+ a x))
+;; (define a 5)
+;; (+ a b))
+;; (f 10)))
+
+;; ;;; M-Eval value:
+;; ok
+
+;; ;;; M-Eval input:
+;; (m)
+
+;; ;;; M-Eval value:
+;; 20
