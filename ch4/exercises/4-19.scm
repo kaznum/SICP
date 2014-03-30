@@ -41,13 +41,15 @@
 	((application? exp)
 	 (let ((args (list-of-values (operands exp) env)))
 	   (if (any delay? args)
-	       (append (list 'delayed (operator exp))
-		       (map (lambda (x) (if (delay? x) (cadr x) x))
-			    (operands exp)))
-	       (apply (eval (operator exp) env)
-		      args))))
+	       (make-delayed-value exp)
+	       (apply (eval (operator exp) env) args))))
 	(else
 	 (error "Unknown expression type: EVAL" exp))))
+
+(define (make-delayed-value exp)
+  (append (list 'delayed (operator exp))
+	  (map (lambda (x) (if (delay? x) (cadr x) x))
+	       (operands exp))))
 
 (define apply-in-underlying-scheme apply)
 
