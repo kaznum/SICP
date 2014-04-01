@@ -385,4 +385,115 @@
 
 ;; Answer b.
 
-;; to be continued
+;; (define (f x)
+;;   (let ((even? (lambda (n) (if (= n 0) true (odd? (- n 1)))))
+;;	(odd? (lambda (n) (if (= n 0) false (even? (- n 1))))))
+;;    (even? x)))
+;; is converted as follows,
+
+;; (define (f x)
+;;   (lambda (x)
+;;     ((lambda (even? odd?)
+;;        (even? x))
+;;      ((lambda (n) (if (= n 0) true (odd? (- n 1))))
+;;       (lambda (n) (if (= n 0) false (even? (- n 1))))))))
+
+
+;;         +------------------------------+
+;;         |                              |
+;; global  |    f: ---+                   |
+;;         |          |                   |
+;;         +----------|-------------------+
+;;                    |   ^
+;;                    V   |
+;;                  +---+---+
+;;                  | * | * |
+;;                  +-------+
+;;    (lambda (x)...) ^
+;;                    |        +-------------+
+;;                    +--- E1  |             |
+;;                             | <anonymous> |
+;;                             |             |
+;;                             +-------------+
+;;                                ^     (lambda x)'s body
+;;                                |
+;;                +---+---+       |
+;;                | * | * |       |
+;;                +-------+       |
+;;    (lambda       ^  |          |
+;;    (even? odd?)  |  |          |
+;;       ....)      |  |          |
+;;                  |  V          |
+;;           +----------------------------------------+
+;;       E2  | evaluation of ((lambda (even? odd?)... |
+;;           +----------------------------------------+
+;;              ^                          ^
+;;              |                          |
+;;          +-------+                  +-------+
+;;      E3  |       |              E4  |       |
+;;          +-------+                  +-------+
+;;            |   ^                      |   ^
+;;            |   |                      |   |
+;;            V   |                      V   |
+;;          +---+---+                  +---+---+
+;;          | * | * |                  | * | * |
+;;          +-------+                  +-------+
+;;        even?                       odd?
+;;        (lambda (n)                 (lambda (n)
+;;           (if (= n 0)                (if (= n 0)
+;;               true                       false
+;;               (odd? (- n 1))))           (even? (- n 1))))
+;;
+;;        odd? in even? is not related to odd? function
+;;        Neither as even? vice versa.
+
+
+;; (define (f x)
+;;   (letrec ((even? (lambda (n) (if (= n 0) true (odd? (- n 1)))))
+;;	(odd? (lambda (n) (if (= n 0) false (even? (- n 1))))))
+;;    (even? x)))
+;; is converted as follows,
+
+;; (define (f x)
+;;   (lambda (x)
+;;     ((lambda (even? odd?)
+;;        (set! even? (lambda (n) (if (= n 0) true (odd? (- n 1))))
+;;        (set! odd? (lambda (n) (if (= n 0) false (even? (- n 1))))
+;;        (even? x))
+;;      ('*unassigned* '*unassigned*))))
+
+;;         +------------------------------+
+;;         |                              |
+;; global  |    f: ---+                   |
+;;         |          |                   |
+;;         +----------|-------------------+
+;;                    |   ^
+;;                    V   |
+;;                  +---+---+
+;;                  | * | * |
+;;                  +-------+
+;;    (lambda (x)...) |
+;;                    |        +-------------+
+;;                    +--> E1  |             |
+;;                             | <anonymous> |
+;;                             |             |
+;;                             +-------------+
+;;                                ^     (lambda x)'s body
+;;                                |
+;;                +---+---+       |
+;;                | * | * |       |
+;;                +-------+       |
+;;    (lambda       ^  |          |
+;;    (even? odd?)  |  |          |
+;;       ....)      |  |          |
+;;                  |  V          |
+;;           +---------------------------------------------------------------------------+
+;;       E2  | even? -> '*unassigned* -> (lambda (n) (if (= n 0) true (odd? (- n 1))))   |
+;;           | odd? -> '*unassigned* -> (lambda (n) (if (= n 0) false (even? (- n 1))))  |
+;;           +---------------------------------------------------------------------------+
+;;
+;;        The variable 'even?', 'odd?' and their bodys are all in the same frame.
+;;        So they are refered to each other.
+
+
+
