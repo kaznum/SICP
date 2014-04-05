@@ -27,4 +27,19 @@
 (define (analyze-variable exp)
   (lambda (env) (lookup-variable-value exp env)))
 
+(define (analyze-assignment exp)
+  (let ((var (assignment-variable exp))
+	(vproc (analyze (assignment-value exp))))
+    (lambda (env)
+      (set-variable-value! var (vproc env) env)
+      'ok)))
+
+(define (analyze-definition exp)
+  (let ((var (definition-variable exp))
+	(vproc (analyze (definition-value exp))))
+    (lambda (env)
+      (define-variable! var (vproc env) env)
+      'ok)))
+
+
 ;; to be continued
