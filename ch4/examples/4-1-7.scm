@@ -41,5 +41,12 @@
       (define-variable! var (vproc env) env)
       'ok)))
 
+(define (analyze-if exp)
+  (let ((pproc (analyze (if-predicate exp)))
+	(cproc (analyze (if-consequent exp)))
+	(aproc (analyze (if-alternative exp))))
+    (lambda (env) (if (true? (pproc env))
+		      (cproc env)
+		      (aproc env)))))
 
 ;; to be continued
