@@ -1,4 +1,4 @@
-;; Calcurate fib 3000 * 100 times)
+;; Calcurate factorial 3000 * 100 times)
 ;; See the result of 4-24-analyze.scm and 4-24-eval.scm
 ;;
 ;; The ratio is 50sec : 86sec
