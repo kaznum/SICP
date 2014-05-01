@@ -340,5 +340,12 @@
       (actual-value (thunk-exp obj) (thunk-env obj))
       obj))
 
+(define (delay-it exp env)
+  (list 'thunk exp env))
+(define (thunk? obj)
+  (tagged-list? obj 'thunk))
+(define (thunk-exp thunk) (cadr thunk))
+(define (thunk-env thunk) (caddr thunk))
+
 
 ;; to be continued
