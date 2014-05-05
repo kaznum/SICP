@@ -28,7 +28,7 @@
 (define (actual-value exp env)
   (force-it (eval exp env)))
 
-
+(define apply-in-underlying-scheme apply)
 (define (apply procedure arguments env)
   (cond ((primitive-procedure? procedure)
 	 ;; (apply-primitive-procedure procedure arguments))
@@ -335,7 +335,7 @@
 
 
 ;;; Representing thunks
-;;;; these code is replaced imediately
+;;;; these code is replaced immediately
 ;; (define (force-it obj)
 ;;   (if (thunk? obj)
 ;;       (actual-value (thunk-exp obj) (thunk-env obj))
@@ -367,3 +367,14 @@
 	((evaluated-thunk? obj) (thunk-value obj))
 	(else obj)))
 
+;; ;; TEST
+;; 1 ]=> (define the-global-environment (setup-environment))
+;; 1 ]=> (driver-loop)
+;; ;;; L-Eval input:
+;; (define (try a b) (if (= a 0) 1 b))
+;; ;;; L-Eval value:
+;; ok
+;; ;;; L-Eval input:
+;; (try 0 (/ 1 0))
+;; ;;; L-Eval value:
+;; 1
