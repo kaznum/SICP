@@ -345,8 +345,7 @@
 (define the-global-environment (setup-environment))
 
 ;; Answer
-;; The definition of w evaluates only outer (id ..) application,
-;; So,
+;; The definition of w evaluates only outer (id ..) application (in 'eval-definition'), and inner (id 10)'s evaluation is delayed.
 ;; (id (id 10))
 ;; (set! count (+ count 1)) (id 10) ;; the second (id 10) is delayed
 ;; (set! count 1) (id 10)
