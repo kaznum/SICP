@@ -4,6 +4,8 @@
   (cond ((= n 0) 1)
 	((= n 1) 1)
 	(else (+ (fib (- n 2)) (fib (- n 1))))))
+;; see the result of implementation with/without memoize in
+;; 4-29-with-memoize.scm and 4-29-without-memoize.scm
 
 (define count 0)
 (define (id x) (set! count (+ count 1)) x)
