@@ -66,7 +66,7 @@
 (define (list-of-conditional-delayed-args params args env)
   (cond ((no-operands? args) '())
 	((lazy-param? (first-parameter params))
-	 (cons (delay-it-no-memo (first-operand args) env)
+	 (cons (lazy (first-operand args) env)
 	       (list-of-conditional-delayed-args (rest-parameters params) (rest-operands args) env)))
 	((memoized-param? (first-parameter params))
 	 (cons (delay-it (first-operand args) env)
@@ -353,20 +353,19 @@
   (env-loop env))
 
 (define (delay-it exp env)
-  (list 'thunk exp env))
+  (list 'memoize exp env))
 ;; addition
-(define (delay-it-no-memo exp env)
-  (list 'thunk-no-memo exp env))
+(define (lazy exp env)
+  (list 'lazy exp env))
 ;; end of addition
 
-(define (thunk? obj)
-  (tagged-list? obj 'thunk))
+(define (memoize? obj)
+  (tagged-list? obj 'memoize))
 (define (thunk-exp thunk) (cadr thunk))
 (define (thunk-env thunk) (caddr thunk))
 
-(define (thunk-no-memo? obj)
-  (tagged-list? obj 'thunk-no-memo))
-
+(define (lazy? obj)
+  (tagged-list? obj 'lazy))
 
 (define (evaluated-thunk? obj)
   (tagged-list? obj 'evaluated-thunk))
@@ -375,7 +374,7 @@
 
 ;; change
 (define (force-it obj)
-  (cond ((thunk? obj)
+  (cond ((memoize? obj)
 	 (let ((result (actual-value (thunk-exp obj)
 				     (thunk-env obj))))
 	   (set-car! obj 'evaluated-thunk)
@@ -385,7 +384,7 @@
 		     '())
 	   result))
 	((evaluated-thunk? obj) (thunk-value obj))
-	((thunk-no-memo? obj)
+	((lazy? obj)
 	 (actual-value (thunk-exp obj) (thunk-env obj)))
 	(else obj)))
 ;; changed
@@ -401,11 +400,11 @@
 ;; ;;; L-Eval value:
 ;; ok
 ;; ;;; L-Eval input:
-;;  (begin
-;;    (define a (get-universal-time))
-;;    (fib 20)
-;;    (define b (get-universal-time))
-;;    (- b a))
+;; (begin
+;;   (define a (get-universal-time))
+;;   (fib 20)
+;;   (define b (get-universal-time))
+;;   (- b a))
 ;; ;;; L-Eval value:
 ;; 46
 ;; ;;; L-Eval input:
