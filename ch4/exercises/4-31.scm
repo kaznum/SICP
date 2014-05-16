@@ -1,4 +1,3 @@
-;;; Code From Text ch4.2.2
 (define (eval exp env)
   (cond ((self-evaluating? exp) exp)
 	((variable? exp) (lookup-variable-value exp env))
@@ -27,21 +26,34 @@
 (define apply-in-underlying-scheme apply)
 (define (apply procedure arguments env)
   (cond ((primitive-procedure? procedure)
-	 ;; (apply-primitive-procedure procedure arguments))
 	 (apply-primitive-procedure
 	  procedure
-	  (list-of-arg-values arguments env))) ;; changed
+	  (list-of-arg-values arguments env)))
 	((compound-procedure? procedure)
 	 (eval-sequence
 	  (procedure-body procedure)
 	  (extend-environment
-	   (procedure-parameters procedure)
-	   ;; arguments
-	   (list-of-delayed-args arguments env) ;; changed
+	   (procedure-parameter-symbols (procedure-parameters procedure)) ;; Changed
+	   (list-of-conditional-delayed-args (procedure-parameters procedure) arguments env) ;; changed
 	   (procedure-environment procedure))))
 	(else
 	 (error
 	  "Unknown procedure type: APPLY" procedure))))
+
+;; Addition
+(define (procedure-parameter-symbols orig-parameters)
+  (cond ((no-parameters? orig-parameters) '())
+	((or (lazy-param? (first-parameter orig-parameters))
+	     (memoized-param? (first-parameter orig-parameters)))
+	 (cons (parameter-symbol (first-parameter orig-parameters))
+	       (procedure-parameter-symbols (cdr orig-parameters))))
+	(else
+	 (cons (first-parameter orig-parameters)
+	       (procedure-parameter-symbols (cdr orig-parameters))))))
+
+(define (no-parameters? exps) (null? exps))
+(define (parameter-symbol exp) (car exp))
+;; End of Addition
 
 (define (list-of-arg-values exps env)
   (if (no-operands? exps)
@@ -50,13 +62,33 @@
 			  env)
 	    (list-of-arg-values (rest-operands exps)
 				env))))
+;; Changed
+(define (list-of-conditional-delayed-args params args env)
+  (cond ((no-operands? args) '())
+	((lazy-param? (first-parameter params))
+	 (cons (delay-it-no-memo (first-operand args) env)
+	       (list-of-conditional-delayed-args (rest-parameters params) (rest-operands args) env)))
+	((memoized-param? (first-parameter params))
+	 (cons (delay-it (first-operand args) env)
+	       (list-of-conditional-delayed-args (rest-parameters params) (rest-operands args) env)))
+	(else
+	 (cons (actual-value (first-operand args) env)
+	       (list-of-conditional-delayed-args (rest-parameters params) (rest-operands args) env)))))
 
-(define (list-of-delayed-args exps env)
-  (if (no-operands? exps)
-      '()
-      (cons (delay-it (first-operand exps)
-		      env)
-	    (list-of-delayed-args (rest-operands exps) env))))
+;; Additional codes
+(define (first-parameter exps) (car exps))
+(define (rest-parameters exps) (cdr exps))
+
+(define (lazy-param? exp)
+  (cond ((not (pair? exp)) false)
+	((eq? (cadr exp) 'lazy) true)
+	(else false)))
+
+(define (memoized-param? exp)
+  (cond ((not (pair? exp)) false)
+	((eq? (cadr exp) 'lazy-memo) true)
+	(else false)))
+;; end of addition
 
 (define (eval-if exp env)
   (if (true? (actual-value (if-predicate exp) env))
@@ -322,10 +354,18 @@
 
 (define (delay-it exp env)
   (list 'thunk exp env))
+;; addition
+(define (delay-it-no-memo exp env)
+  (list 'thunk-no-memo exp env))
+;; end of addition
+
 (define (thunk? obj)
   (tagged-list? obj 'thunk))
 (define (thunk-exp thunk) (cadr thunk))
 (define (thunk-env thunk) (caddr thunk))
+
+(define (thunk-no-memo? obj)
+  (tagged-list? obj 'thunk-no-memo))
 
 
 (define (evaluated-thunk? obj)
@@ -333,6 +373,7 @@
 (define (thunk-value evaluated-thunk)
   (cadr evaluated-thunk))
 
+;; change
 (define (force-it obj)
   (cond ((thunk? obj)
 	 (let ((result (actual-value (thunk-exp obj)
@@ -344,24 +385,56 @@
 		     '())
 	   result))
 	((evaluated-thunk? obj) (thunk-value obj))
+	((thunk-no-memo? obj)
+	 (actual-value (thunk-exp obj) (thunk-env obj)))
 	(else obj)))
+;; changed
 
 (define the-global-environment (setup-environment))
 
 ;; 1 ]=> (driver-loop)
 ;; ;;; L-Eval input:
-;; (define (fib n)
-;;   (cond ((= n 0) 1)
-;; 	((= n 1) 1)
-;; 	(else (+ (fib (- n 2)) (fib (- n 1))))))
-;; (begin
-;;   (define a (get-universal-time))
-;;   (fib 20)
-;;   (define b (get-universal-time))
-;;   (- b a))
+;; (define (fib (n lazy))
+;;    (cond ((= n 0) 1)
+;;  	((= n 1) 1)
+;;  	(else (+ (fib (- n 2)) (fib (- n 1))))))
 ;; ;;; L-Eval value:
 ;; ok
 ;; ;;; L-Eval input:
+;;  (begin
+;;    (define a (get-universal-time))
+;;    (fib 20)
+;;    (define b (get-universal-time))
+;;    (- b a))
 ;; ;;; L-Eval value:
-;; 7
+;; 46
 ;; ;;; L-Eval input:
+;;  (define (fib (n lazy-memo))
+;;    (cond ((= n 0) 1)
+;;  	((= n 1) 1)
+;;  	(else (+ (fib (- n 2)) (fib (- n 1))))))
+;; ;;; L-Eval value:
+;; ok
+;; ;;; L-Eval input:
+;; (begin
+;;    (define a (get-universal-time))
+;;    (fib 20)
+;;    (define b (get-universal-time))
+;;    (- b a))
+;; ;;; L-Eval value:
+;; 8
+;; ;;; L-Eval input:
+;;  (define (fib n)
+;;    (cond ((= n 0) 1)
+;;  	((= n 1) 1)
+;;  	(else (+ (fib (- n 2)) (fib (- n 1))))))
+;; ;;; L-Eval value:
+;; ok
+;; ;;; L-Eval input:
+;; (begin
+;;    (define a (get-universal-time))
+;;    (fib 20)
+;;    (define b (get-universal-time))
+;;    (- b a))
+;; ;;; L-Eval value:
+;; 8
