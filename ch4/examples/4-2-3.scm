@@ -351,5 +351,17 @@
 (define (car z) (z (lambda (p q) p)))
 (define (cdr z) (z (lambda (p q) q)))
 
+(define (list-ref items n)
+  (if (= n 0)
+      (car items)
+      (list-ref (cdr items) (- n))))
+
+(define (map proc items)
+  (if (null? items)
+      '()
+      (cons (proc (car items)) (map proc (cdr items)))))
+
+(define (scale-list items factor)
+  (map (lambda (x) (* x factor)) items))
 
 ;; to be continued
