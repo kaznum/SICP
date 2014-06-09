@@ -8,5 +8,3 @@
   (amb n (an-integer-starting-from (+ n 1))))
 
 ;;; Driver loop
-
-;; to be continued
