@@ -19,10 +19,11 @@
 
 ;;; a.
 ;; (define x 3)
-;; 'define' is interpreted as procedure but it isn't so it does
-;; not work well.
+;; 'define' is interpreted as procedure because the condition `(application? exp)` hits before
+;; `(definition? exp)` hits but `define` is not an operator. That's why it does not work well.
 
 ;;; b.
 (define (application? exp) (tagged-list? exp 'call))
 (define (operator exp) (cadr exp))
 (define (operands exp) (cddr exp))
+
