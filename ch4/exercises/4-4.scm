@@ -1,4 +1,4 @@
-;;;;; From text
+;;;;; From text book
 ;;; Apply
 
 (define (apply procedure arguments)
@@ -145,8 +145,11 @@
 		     (sequence->exp (cond-actions first))
 		     (expand-clauses rest))))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;; Answer
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; syntax procedures
 (define (and? exp) (tagged-list? exp 'and))
 (define (or? exp) (tagged-list? exp 'or))
 (define (and-actions exp) (cdr exp))
@@ -155,7 +158,7 @@
 (define (first-act acts) (car acts))
 (define (rest-acts acts) (cdr acts))
 
-
+;; evaluation procedures
 (define (eval-and exps env)
   (define (eval-acts acts)
     (if (null? acts)
@@ -177,6 +180,7 @@
 		(else (eval-acts (rest-acts acts)))))))
   (eval-acts (or-actions exps)))
 
+;; install above
 (define (eval exp env)
   (cond ((self-evaluating? exp) exp)
 	((variable? exp) (lookup-variable-value exp env))
