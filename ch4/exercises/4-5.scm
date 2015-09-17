@@ -169,9 +169,12 @@
 	(cond ((cond-else-clause? first)
 	       (if (null? rest)
 		   (sequence->exp (cond-action first))
-		   (error "ELSE clause isn't last: COND->IF"
+		   (error "ELSE clause isn't last action: COND->IF"
 			  clauses)))
 	      ((cond-extended? first)
+               ;; TODO
+               ;; The following is not good idea because `(cond-predicate first)` is evaluated twice 
+               ;; in the condition and in the truthy action
 	       (make-if (cond-predicate first)
 			(list (cond-extended-action first) (cond-predicate first))
 			(expand-clauses rest)))
