@@ -158,8 +158,8 @@
 	(let-operations (let-clauses exp))))
 
 ;;; Answer
-(define (make-let vars ops body)
-  (list 'let vars ops body))
+(define (make-let vars-ops body)
+  (list 'let vars-ops body))
 
 (define (let*? exp) (tagged-list? exp 'let*))
 (define (let*-clauses exp) (cadr exp))
@@ -172,8 +172,7 @@
     (define (recursive-let vars ops)
       (if (null? vars)
 	  body
-	  (make-let (list (car vars))
-		    (list (car ops))
+	  (make-let (list (cons (car vars) (car ops)))
 		    (recursive-let (cdr vars) (cdr ops)))))
     (recursive-let (let*-variables (let*-clauses exp))
 		   (let*-operations (let*-clauses exp)))))
