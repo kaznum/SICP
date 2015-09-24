@@ -159,13 +159,13 @@
 
 ;;; Answer
 (define (make-let vars-ops body)
-  (list 'let vars-ops body))
+  (cons 'let (cons (vars-ops body))))
 
 (define (let*? exp) (tagged-list? exp 'let*))
 (define (let*-clauses exp) (cadr exp))
 (define (let*-variables clauses) (map car clauses))
 (define (let*-operations clauses) (map cadr clauses))
-(define (let*-body exp) (caddr exp))
+(define (let*-body exp) (cddr exp))
 
 (define (let*->nested-lets exp)
   (let ((body (let*-body exp)))
