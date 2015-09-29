@@ -152,15 +152,16 @@
 (define (let-variables clauses) (map car clauses))
 (define (let-operations clauses) (map cadr clauses))
 (define (let-body exp) (cddr exp))
+
 ;;; Answer
 (define (named-let? exp)
   (and (tagged-list? exp 'let) (not (pair? (cadr exp)))))
 (define (named-let-name exp) (cadr exp))
 (define (named-let-variables exp) (map car (caddr exp)))
-(define (named-let-init-values exp) (map cdr (caddr exp)))
+(define (named-let-init-values exp) (map cadr (caddr exp)))
 (define (named-let-body exp) (cdddr exp))
 (define (named-procedure name variables body)
-  (cons 'define (cons (cons name variables) body)))
+  (list 'define (cons name variables) body))
 
 (define (let->combination exp)
   (if (named-let? exp)
