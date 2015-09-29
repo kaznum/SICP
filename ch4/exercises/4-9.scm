@@ -174,27 +174,32 @@
 
 ;; Answer
 ;; example
-;; (while (= n 100)
-;; 	     (set! n (+ n 1)))
+;; (while (> n 100)
+;;        (set! n (+ n 2))
+;;        (set! n (+ n 1)))
 ;; ==>
 ;; (begin
 ;;   (define (iter)
-;;     (if (= n 100)
-;; 	(begin
-;; 	  (set! n (+ n 1))
+;;     (if (> n 100)
+;;      (begin
+;;        (begin
+;; 	    (set! n (+ n 2))
+;; 	    (set! n (+ n 1)))
 ;; 	  (iter))
 ;; 	true))
 ;;   (iter))
 
 (define (while? exp) (tagged-list? exp 'while))
 (define (while-predicate exp) (cadr exp))
-(define (while-body exp) (caddr exp))
+(define (while-body exp) (cddr exp))
 (define (while->combination exp)
   (sequence->exp
-   (list (list 'define (list 'iter)
-	       (make-if (while-predicate exp)
-			(while-body exp)
-			'true))
+   (list 'define (list 'iter)
+	 (make-if (while-predicate exp)
+		  (sequence->exp
+		   (sequence->exp (while-body exp))
+		   (list 'iter))
+		  'true))
 	 (list 'iter))))
 
 (define (eval exp env)
