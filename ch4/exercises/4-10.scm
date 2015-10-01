@@ -168,15 +168,15 @@
 	 (error "Unknown expression type: EVAL" exp))))
 
 ;;; Answer
-;; Change let statement use <=
-;; (let ((1 => aaa)
-;;       (2 => bbb))
+;; Change let statement variable and value to be exchanged
+;; (let ((1 aaa)
+;;       (2 bbb))
 ;;   ....)
 
 (define (let? exp) (tagged-list? exp 'let))
 (define (let-clauses exp) (cadr exp))
 ;; changes as follows
-(define (let-variables clauses) (map caddr clauses))
+(define (let-variables clauses) (map cadr clauses))
 (define (let-operations clauses) (map car clauses))
 ;; end of changes
 (define (let-body exp) (cddr exp))
