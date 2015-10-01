@@ -65,7 +65,7 @@
   (if (= (length variables) (length values))
       (if (null? variabless)
 	  '()
-	  (cons (cons (car variables) (var values))
+	  (cons (cons (car variables) (car values))
 		(make-frame (cdr variables (cdr values)))))
       (error "lengths of variables and values are different from each other")))
 
