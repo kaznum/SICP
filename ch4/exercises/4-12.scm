@@ -44,7 +44,7 @@
       (let ((frame (first-frame env)))
 	(scan (frame-variables frame)
 	      (frame-values frame)))))
-  
+
 (define (lookup-variable-value var env)
   (define (proc-null env)
     (env-loop var proc-null proc-found (enclosing-environment env)))
