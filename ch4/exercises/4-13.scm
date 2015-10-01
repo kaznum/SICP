@@ -61,7 +61,7 @@
 
 ;; Answer
 ;;
-;; Unbind in the enclosing frames when there is no definition in the
+;; Seek and unbind variable in the enclosing frames when there is no definition in the
 ;; first frame.
 ;; The unbinding should be only in the first frame because
 ;; enclosing environment is refered by other frames and
@@ -70,6 +70,10 @@
 ;; So the following code unbinds the definition of variable even in
 ;; the enclosing envs.
 ;;
+
+(define (replace-first-frame env frame)
+  (set-car! env frame))
+
 (define (make-unbound! var env)
   (define (env-loop env)
     (define (scan vars vals prev-vars prev-vals)
@@ -82,6 +86,9 @@
     (if (eq? env the-empty-environment)
 	(error "Unbound variable" var)
 	(let ((frame (first-frame env)))
-	  (scan (frame-variables frame)
-		(frame-values frame)))))
+	  (let ((variables (frame-variables frame))
+		(values (frame-values frame)))
+	    (if (eq? var (car variables))
+		(replace-first-frame env (make-frame (cdr variables) (cdr values)))
+		(scan (cdr variables) (cdr values) variables values))))))
   (env-loop env))
