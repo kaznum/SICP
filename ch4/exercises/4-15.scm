@@ -5,7 +5,6 @@
 ;; evaluating (try try)
 
 ;; (halts? p p) -> (halts? try try)
-;; If (halts? try try) is true, (run-forever) is executed,
-;; which means the procedure does not halt.
-;; If not, 'halts.
-;; It is paradox.
+;; If (halts? try try)) is true (which means 'halt'), but (run-forever) is executed.
+;; If false (which means 'not halt'), but returns 'halts.
+;; This is a paradox.
