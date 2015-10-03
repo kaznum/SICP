@@ -318,15 +318,19 @@
 
 ;; Answer of b.
 
+;; The result of scan-out-defines called with the body containing 'inline defines' is
+;; ((let .....)) which seems that it has extra '(..)', but it should for the consistency that
+;; scan-out-defines called with body which does not have 'the inline defines'
+;; might return multiple lines of body.
 (define (scan-out-defines body)
-  (let ((vars-vals (defines-in-body body)))
-    (if (null? vars-vals)
-	body
-	(list (append (list 'let
-		      (map (lambda (x) (list (car x) ''*unassigned*))
-			   vars-vals))
-		(map (lambda (x) (list 'set! (car x) (cdr x))) vars-vals)
-		(not-defines-in-body body))))))
+  (let ((var-val-pairs (defines-in-body body)))
+    (if (null? var-val-pairs)
+        body
+        (list (append (list 'let
+                            (map (lambda (x) (list (car x) ''*unassigned*))
+                                 var-val-pairs))
+                      (map (lambda (x) (list 'set! (car x) (cdr x))) var-val-pairs)
+                      (not-defines-in-body body))))))
 
 (define (defines-in-body body)
   (cond ((null? body) '())
@@ -344,7 +348,7 @@
 	(else
 	 (cons (car body) (not-defines-in-body (cdr body))))))
 
-;; TEST of Answer b.      
+;; TEST of Answer b.
 ;; (scan-out-defines '((define x 2) (define y 3) (+ x y) (* x 3) ))
 ;; ;Value 2: ((let ((x (quote *unassigned*)) (y (quote *unassigned*))) (set! x 2) (set! y 3) (+ x y) (* x 3)))
 
