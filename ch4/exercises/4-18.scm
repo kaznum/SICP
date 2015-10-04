@@ -34,7 +34,7 @@
 	(set! y a)
 	(set! dy b))
       (integral (delay dy) y0 dt)
-      (b (stream-map f y))))
+      (stream-map f y)))
    '*unassigned* '*unassigned*))
 
 ;; Translated with the text's converter
@@ -54,6 +54,8 @@
 
 
 ;; The case of ex4.18 does not work well because
-;; dy is still '*unassigned. when (integral...) is evaluated.
+;; dy is still '*unassigned when (integral...) is evaluated and the result is required,
+;; which occurs before (set! dy ...) is called.
+;;
 ;; Otherwise, the case of the text works well because y and dy are set
 ;; when (integral...) is evaluated.
