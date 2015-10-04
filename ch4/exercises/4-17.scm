@@ -10,18 +10,21 @@
 ;;         +----|-----------------------+
 ;;              |
 ;;              V
-;;          +-------------------------+
-;;      E1  | u : result of <e1>      |
-;;          | v : result of <e2>      |
-;;          | return : result of <e3> |
-;;          +-------------------------+
-;;              ^ lambda (vars)
-;;              |
-;;              |
-;;          +--------+
-;;      E2  | <e3>   |
-;;          +--------+
-
+;;          +-------------------------------------+
+;;      E1  | u : result of <e1>                  |
+;;          | v : result of <e2>                  |
+;;          | return : result of <e3>             |
+;;          +-------------------------------------+
+;;              ^ lambda (vars) |             |
+;;              |               |             |
+;;              |               |             |
+;;              |               |             |
+;;         +--------+       +--------+      +--------+
+;;     E2  | <e1>   |    E3 | <e2>   |   E4 | <e3>   |
+;;         +--------+       +--------+      +--------+
+;;
+;;
+;;
 ;; (lambda <vars>
 ;;   (let ((u '*unassigned*)
 ;; 	(v '*unassigned*))
@@ -51,13 +54,13 @@
 ;;              |                   |                 |  |  |
 ;;              |                   |                 |  |  |
 ;;          +---------------+     +---------------+   |  |  |
-;;      E2  | '*unassigned* |  E3 | '*unassigned* |   |  |  |
+;;      E3  | '*unassigned* |  E4 | '*unassigned* |   |  |  |
 ;;          +---------------+     +---------------+   |  |  |
 ;;                                        +-----------+  |  +----------+
 ;;                                        |              |             |
 ;;                                        |              |             |
 ;;                                   +--------+      +--------+      +--------+
-;;                               E4  | <e1>   |   E5 | <e2>   |   E6 | <e3>   |
+;;                               E5  | <e1>   |   E6 | <e2>   |   E7 | <e3>   |
 ;;                                   +--------+      +--------+      +--------+
 ;;                                   (set! u ...)    (set! v ...)
 
@@ -72,9 +75,9 @@
 ;; The case of using 'let' does not change the outer structure of
 ;; 'let' (in (lambda ...)) and returns only the result to it, which
 ;; becomes the result of the (lambda ...) too because
-;; there is not any other evaluation in (lambda...).
+;; there is no other evaluation in (lambda...).
 ;; The both cases do not make any effect to the global environment and
-;; offers the same result.
+;; offer the same result.
 
 ;; c. Design a way to make the interpreter implement the “simultaneous”
 ;;    scope rule for internal definitions without constructing the
@@ -365,6 +368,7 @@
 (define the-global-environment (setup-environment))
 
 ;;; Answer
+;;; Strategy: Move all '(define ...)' to the top of the body.
 (define (reorder-definitions body)
   (define (iter exp defines procs)
     (if (null? exp)
