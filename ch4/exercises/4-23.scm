@@ -38,15 +38,3 @@
 ;; but Alyssa's version does not analyze the sequence in 'analyze',
 ;; This means Alyssa's version still has the staffs to be analyzed and
 ;; is less efficient at runtime.
-
-
-;; Alyssa's version might not work well because
-;; ```
-;; (cond ((null? (cdr procs))
-;;   ((car procs) env))
-;;   (else
-;;     ((car procs) env)
-;;     (execute-sequence (cdr procs) env))))
-;; ```
-;; tries to evaluate the result of `analyze` "((car procs) env)" directly on the basic scheme program
-;; but it is the consumable form only by our DSL.
