@@ -84,7 +84,7 @@
 	 (error "Unknown procedure type: EXECUTE-APPLICATION"
 		proc))))
 
-;; Codes from ex4-6
+;; Codes from ex4-6 (need not to change)
 (define (let? exp) (tagged-list? exp 'let))
 (define (let-clauses exp) (cadr exp))
 (define (let-variables clauses) (map car clauses))
@@ -95,6 +95,6 @@
 		     (let-body exp))
 	(let-operations (let-clauses exp))))
 
-;; Definition of analyze-let
+;; Definition of analyze-let which is called in 'eval'
 (define (analyze-let exp)
   (analyze (let->combination exp)))
