@@ -345,7 +345,11 @@
 (define the-global-environment (setup-environment))
 
 ;; Answer
-;; The definition of w evaluates only outer (id ..) application (in 'eval-definition'), and inner (id 10)'s evaluation is delayed.
+;; The definition of w evaluates only outer (id ..) application.
+;;   The outer (id ...) is applied as an argument to actual-value in `apply`
+;;   ('eval-definition' -> eval(application?) -> apply(actual-value) )
+;;   The inner (id 10)'s evaluation is delayed as an argument of list-of-delayed-args in `apply`.
+;;
 ;; (id (id 10))
 ;; (set! count (+ count 1)) (id 10) ;; the second (id 10) is delayed
 ;; (set! count 1) (id 10)
