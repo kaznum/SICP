@@ -383,10 +383,12 @@
 	   (set-cdr! (cdr obj)
 		     '())
 	   result))
-	((evaluated-thunk? obj) (thunk-value obj))
 	((lazy? obj)
 	 (actual-value (thunk-exp obj) (thunk-env obj)))
-	(else obj)))
+	((evaluated-thunk? obj)
+         (thunk-value obj))
+	(else
+         obj)))
 ;; changed
 
 (define the-global-environment (setup-environment))
@@ -394,8 +396,8 @@
 ;; 1 ]=> (driver-loop)
 ;; ;;; L-Eval input:
 ;; (define (fib (n lazy))
-;;    (cond ((= n 0) 1)
-;;  	((= n 1) 1)
+;;   (cond ((= n 0) 1)
+;;         ((= n 1) 1)
 ;;  	(else (+ (fib (- n 2)) (fib (- n 1))))))
 ;; ;;; L-Eval value:
 ;; ok
@@ -406,12 +408,12 @@
 ;;   (define b (get-universal-time))
 ;;   (- b a))
 ;; ;;; L-Eval value:
-;; 46
+;; 36
 ;; ;;; L-Eval input:
-;;  (define (fib (n lazy-memo))
-;;    (cond ((= n 0) 1)
-;;  	((= n 1) 1)
-;;  	(else (+ (fib (- n 2)) (fib (- n 1))))))
+;; (define (fib (n lazy-memo))
+;;   (cond ((= n 0) 1)
+;;         ((= n 1) 1)
+;;         (else (+ (fib (- n 2)) (fib (- n 1))))))
 ;; ;;; L-Eval value:
 ;; ok
 ;; ;;; L-Eval input:
@@ -421,12 +423,12 @@
 ;;    (define b (get-universal-time))
 ;;    (- b a))
 ;; ;;; L-Eval value:
-;; 8
+;; 5
 ;; ;;; L-Eval input:
-;;  (define (fib n)
-;;    (cond ((= n 0) 1)
-;;  	((= n 1) 1)
-;;  	(else (+ (fib (- n 2)) (fib (- n 1))))))
+;; (define (fib n)
+;;   (cond ((= n 0) 1)
+;;         ((= n 1) 1)
+;;         (else (+ (fib (- n 2)) (fib (- n 1))))))
 ;; ;;; L-Eval value:
 ;; ok
 ;; ;;; L-Eval input:
@@ -436,4 +438,4 @@
 ;;    (define b (get-universal-time))
 ;;    (- b a))
 ;; ;;; L-Eval value:
-;; 8
+;; 6
