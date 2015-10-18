@@ -33,7 +33,9 @@
         (else (error "Unknown expression type: ANALYZE" exp))))
 
 
-;; If unless is procedure, the following code will work well, but not for the special form.
+;; If unless is procedure, the following code will work well, but not for the special form
+;; because in scheme, `procedure` is a first-class object and assignable/usable
+;; as an argument, etc.
 (define (either proc condition a b)
   (proc condition a b))
 
