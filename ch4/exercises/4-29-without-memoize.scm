@@ -327,8 +327,7 @@
 (define (thunk-exp thunk) (cadr thunk))
 (define (thunk-env thunk) (caddr thunk))
 
-(define (thunk-value evaluated-thunk)
-  (cadr evaluated-thunk))
+;;; non-memoize version
 
 (define (force-it obj)
   (if (thunk? obj)

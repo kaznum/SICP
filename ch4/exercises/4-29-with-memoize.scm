@@ -327,7 +327,7 @@
 (define (thunk-exp thunk) (cadr thunk))
 (define (thunk-env thunk) (caddr thunk))
 
-
+;;; memoize version
 (define (evaluated-thunk? obj)
   (tagged-list? obj 'evaluated-thunk))
 (define (thunk-value evaluated-thunk)
