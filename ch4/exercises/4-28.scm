@@ -10,4 +10,5 @@
 ;; (p' x) where p' is the thunk of 'p'.
 ;; If application is evaluated by 'eval' instead of 'actual-value',
 ;; it cannot be evaluated because it is thunk.
-;; So 'eval' use 'actual-value' before passing it to 'apply'.
+;; (thunk becomes actual value only by `force-it`)
+;; So 'eval' uses 'actual-value' (which calls `force-it`) before passing it to 'apply'.
