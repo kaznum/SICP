@@ -38,8 +38,8 @@
 (define (integral integrand initial-value dt)
   (define int
     (cons initial-value
-	  (add-lists int
-		     (scale-list integrand dt))))
+          (add-lists int
+                     (scale-list integrand dt))))
   int)
 
 
@@ -62,5 +62,4 @@
   (define ddy (add-lists (scale-list dy a)
                            (scale-list y b)))
   y)
-
 
