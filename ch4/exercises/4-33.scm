@@ -106,19 +106,20 @@
 ;; Answer ex4.33
 ;; Change the definition of text-of-quotation
 (define (text-of-quotation exp)
-  (define (new-list texts)
+  (define (lazy-list texts)
     (if (null? texts)
-	'()
-	(make-procedure '(m)
-			(list '(m car-value cdr-value))
-			(extend-environment
-			 (list 'car-value 'cdr-value)
-			 (list (car texts) (new-list (cdr texts)))
-			 the-empty-environment))))
+        '()
+        (make-procedure '(m)
+                        (list '(m car-value cdr-value))
+                        (extend-environment
+                         (list 'car-value 'cdr-value)
+                         (list (car texts) (lazy-list (cdr texts)))
+                         the-empty-environment))))
+  ;; "'(...)" equals to (quote (...))
   (let ((texts (cadr exp)))
-    (if (pair? texts)
-	(new-list texts)
-	texts)))
+    (if (or (null? texts) (pair? texts))
+        (lazy-list texts)
+        texts)))
 ;; End of answer
 
 (define (tagged-list? exp tag)
@@ -364,9 +365,7 @@
 
 (define the-global-environment (setup-environment))
 
-
-
-;;; ch4.2.3
+;;; TEST
 
 ;; The following is run in scheme emulator
 
@@ -374,7 +373,6 @@
 ;; (define (cons x y) (lambda (m) (m x y)))
 ;; (define (car z) (z (lambda (p q) p)))
 ;; (define (cdr z) (z (lambda (p q) q)))
-
 ;; (define x '(1 2 3))
 ;;; L-Eval input:
 ;; (car x)
