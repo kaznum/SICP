@@ -9,6 +9,14 @@
 	((lambda? exp) (make-procedure (lambda-parameters exp)
 				       (lambda-body exp)
 				       env))
+        ;;
+        ;; ex4.34: add pair-procedure definition
+        ;;
+	((pair-lambda? exp) (make-pair-procedure (pair-lambda-parameters exp)
+                                                 (pair-lambda-body exp)
+                                                 (pair-lambda-actuals exp)
+                                                 env))
+        ;; end of 'ex4.34: add pair-procedure definition'
 	((begin? exp)
 	 (eval-sequence (begin-actions exp) env))
 	((cond? exp) (eval (cond->if exp) env))
@@ -38,7 +46,8 @@
 	 (apply-primitive-procedure
 	  procedure
 	  (list-of-arg-values arguments env)))
-	((compound-procedure? procedure)
+        ;; ex4-34: add condition for pair-procedure
+        ((or (compound-procedure? procedure) (pair-procedure? procedure))
 	 (eval-sequence
 	  (procedure-body procedure)
 	  (extend-environment
@@ -111,23 +120,26 @@
 
 (define (quoted? exp) (tagged-list? exp 'quote))
 
-;; From ex4.33
+;;
+;; ex4.34(modify ex4.33): add output expression of quoted list
+;;
 (define (text-of-quotation exp)
   (define (lazy-list texts)
     (if (null? texts)
         '()
-        (make-procedure '(m)
-                        (list '(m car-value cdr-value))
-                        (extend-environment
-                         (list 'car-value 'cdr-value)
-                         (list (car texts) (lazy-list (cdr texts)))
-                         the-empty-environment))))
+        (make-pair-procedure '(m)
+                             (list '(m car-value cdr-value))
+                             texts
+                             (extend-environment
+                              (list 'car-value 'cdr-value)
+                              (list (car texts) (lazy-list (cdr texts)))
+                              the-empty-environment))))
   ;; "'(...)" equals to (quote (...))
   (let ((texts (cadr exp)))
     (if (or (null? texts) (pair? texts))
         (lazy-list texts)
         texts)))
-;; end 'From ex4.33'
+;; end 'ex4.34(modify ex4.33): add output expression of quoted list'
 
 (define (tagged-list? exp tag)
   (if (pair? exp)
@@ -154,8 +166,24 @@
 (define (lambda-parameters exp) (cadr exp))
 (define (lambda-body exp) (cddr exp))
 
+;;
+;; ex4-34: add accessor for pair-lambda params
+;;
+(define (pair-lambda? exp) (tagged-list? exp 'pair-lambda))
+(define (pair-lambda-parameters exp) (cadr exp))
+(define (pair-lambda-body exp) (caddr exp))
+(define (pair-lambda-actuals exp) (caddr exp))
+;; end of 'ex4-34: add accessor for pair-lambda params'
+
 (define (make-lambda parameters body)
   (cons 'lambda (cons parameters body)))
+
+;;
+;; ex4.34: add make-pair-lambda definition
+;;
+(define (make-pair-lambda parameters body actuals)
+  (cons 'pair-lambda (list (cons parameters body) actuals)))
+;; end of 'ex4.34: add make-pair-lambda definition'
 
 (define (if? exp) (tagged-list? exp 'if))
 (define (if-predicate exp) (cadr exp))
@@ -209,7 +237,6 @@
 		     (sequence->exp (cond-actions first))
 		     (expand-clauses rest))))))
 
-
 ;;
 ;; ex4.34: add definition of cons, car, cdr
 ;;
@@ -222,7 +249,11 @@
   (let ((m (generate-uninterned-symbol 'm))
         (x (cadr exp))
         (y (caddr exp)))
-    (eval (make-lambda (list m) (list (list m x y))) env)))
+    (let ((actuals (cons (actual-value x env)
+                       (if (cons? y)
+                           '...
+                           (actual-value y env)))))
+      (eval (make-pair-lambda (list m) (list (list m x y)) actuals) env))))
 
 (define (eval-car exp env)
   ;; generate (define (car z) (z (lambda (p q) p)))
@@ -248,6 +279,16 @@
   (list 'procedure parameters body env))
 (define (compound-procedure? p)
   (tagged-list? p 'procedure))
+
+;;
+;; ex4.34: add pair-procedure representation
+;;
+(define (make-pair-procedure parameters body actuals env)
+  (list 'pair-procedure parameters body actuals env))
+(define (pair-procedure? p)
+  (tagged-list? p 'pair-procedure))
+;; end of 'ex4.34: add pair-procedure representation'
+
 (define (procedure-parameters p) (cadr p))
 (define (procedure-body p) (caddr p))
 (define (procedure-environment p) (cadddr p))
@@ -338,12 +379,24 @@
   (newline) (display string) (newline))
 
 (define (user-print object)
-  (if (compound-procedure? object)
-      (display (list 'compound-procedure
+  (cond ((compound-procedure? object)
+         (display (list 'compound-procedure
 		     (procedure-parameters object)
 		     (procedure-body object)
-		     '<procedure-env>))
-      (display object)))
+		     '<procedure-env>)))
+        ;;
+        ;; ex4.34: add printing for pair-procedure
+        ;;
+        ((pair-procedure? object)
+         (user-print-for-pair object))
+        ;; end of 'ex4.34: add printing for pair-procedure'
+        (else (display object))))
+;;
+;; ex4.34 user-printer for pair
+;;
+(define (user-print-for-pair obj)
+  (display (cadddr obj)))
+;; end of 'ex4.34 printer for pair'
 
 (define (let? exp) (tagged-list? exp 'let))
 (define (let-clauses exp) (cadr exp))
@@ -354,7 +407,6 @@
   (cons (make-lambda (let-variables (let-clauses exp))
                      (let-body exp))
         (let-operations (let-clauses exp))))
-
 (define (lookup-variable-value var env)
   (define (env-loop env)
     (define (scan vars vals)
@@ -378,7 +430,6 @@
   (tagged-list? obj 'thunk))
 (define (thunk-exp thunk) (cadr thunk))
 (define (thunk-env thunk) (caddr thunk))
-
 
 (define (evaluated-thunk? obj)
   (tagged-list? obj 'evaluated-thunk))
@@ -404,21 +455,21 @@
 
 ;; The following is run in scheme emulator
 
-;; (driver-loop)
-;; (define x '(1 2 3))
-;;; L-Eval input:
-;; (car x)
-;;; L-Eval value:
-;; 1
-;;; L-Eval input:
-;; (define (cdr z) (z (lambda (p q) q)))
-;;; L-Eval value:
-;; ok
-;;; L-Eval input:
-;; (car (cdr x))
-;;; L-Eval value:
-;; 2
-;;; L-Eval input:
-;; (car (cdr (cdr x)))
-;;; L-Eval value:
-;; 3
+;; ;; (driver-loop)
+;; ;;; L-Eval input:
+;; (cons 1 2)
+
+;; ;;; L-Eval value:
+;; (1 . 2)
+
+;; ;;; L-Eval input:
+;; (cons 1 (cons 2 (cons 3 4)))
+
+;; ;;; L-Eval value:
+;; (1 . ...)
+
+;; ;;; L-Eval input:
+;; '(1 2 3)
+
+;; ;;; L-Eval value:
+;; (1 2 3)
