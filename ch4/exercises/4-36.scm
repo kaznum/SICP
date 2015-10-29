@@ -10,7 +10,7 @@
 
 ;; for solution
 (define (an-integer-between n max)
-  (require (> max n))
+  (require (<= n max))
   (amb n (an-integer-between (+ n 1) max)))
 
 (define (a-pythagorean-triple-from low)
