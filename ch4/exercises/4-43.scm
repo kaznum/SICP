@@ -12,9 +12,7 @@
 ;; if we are not told that Mary Ann’s last name is Moore.
 
 ;; Solution A.
-;; It is more efficient if distinct is as lazy as possible
-;; because the other requirements restrict the size of possible alternatives
-;;
+;; It is more efficient if making use of `let` to restrict the size of possible alternatives as possible
 
 (define (distinct? items)
   (cond ((null? items) true)
@@ -31,30 +29,30 @@
     (cond ((null? lst) (list))
           ((p (car lst)) (cons (car lst) (filter (cdr lst) p)))
           (else (filter (cdr lst) p))))
-  (let ((moore (cons (amb 'mary 'melissa, 'rosalind, 'gabrielle 'lorna) (amb 'mary 'melissa, 'rosalind, 'gabrielle 'lorna)))
-        (downing (cons (amb 'mary 'melissa, 'rosalind, 'gabrielle 'lorna) (amb 'mary 'melissa, 'rosalind, 'gabrielle 'lorna)))
-        (hall (cons (amb 'mary 'melissa, 'rosalind, 'gabrielle 'lorna) (amb 'mary 'melissa, 'rosalind, 'gabrielle 'lorna)))
-        (barnacle (cons (amb 'mary 'melissa, 'rosalind, 'gabrielle 'lorna) (amb 'mary 'melissa, 'rosalind, 'gabrielle 'lorna)))
-        (parker (cons (amb 'mary 'melissa, 'rosalind, 'gabrielle 'lorna) (amb 'mary 'melissa, 'rosalind, 'gabrielle 'lorna))))
+  (let ((moore (cons (amb 'mary 'melissa, 'rosalind, 'gabrielle 'lorna) (amb 'mary 'melissa, 'rosalind, 'gabrielle 'lorna))))
     (require (not (eq? (daughter moore) (yacht moore))))
-    (require (not (eq? (daughter downing) (yacht downing))))
-    (require (not (eq? (daughter hall) (yacht hall))))
-    (require (not (eq? (daughter barnacle) (yacht barnacle))))
-    (require (not (eq? (daughter parker) (yacht parker))))
     (require (eq? (daughter moore) 'mary))
-    (require (eq? (yacht barnacle) 'gabrielle))
     (require (eq? (yacht moore) 'lorna))
-    (require (eq? (yacht hall) 'rosalind))
-    (require (eq? (yacht downing) 'melissa))
-    (require (eq? (daughter barnacle) 'melissa))
-    (require (eq? (daughter parker) (yacht (filter (list moore downing hall barnacle parker) (lambda (x) (eq? (daughter x) 'gabrielle))))))
-    (require (distinct? (list (daughter moore) (daughter downing) (daughter hall) (daughter barnacle) (daughter parker))))
-    (require (distinct? (list (yacht moore) (yacht downing) (yacht hall) (yacht barnacle) (yacht parker))))
-    (list (list 'moore-d (daughter moore))
-          (list 'downing-d (daughter downing))
-          (list 'hall-d (daughter hall))
-          (list 'barnacle-d (daughter barnacle))
-          (list 'parker-d (daughter parker)))))
+    (let ((downing (cons (amb 'mary 'melissa, 'rosalind, 'gabrielle 'lorna) (amb 'mary 'melissa, 'rosalind, 'gabrielle 'lorna))))
+      (require (not (eq? (daughter downing) (yacht downing))))
+      (require (eq? (yacht downing) 'melissa))
+      (let ((hall (cons (amb 'mary 'melissa, 'rosalind, 'gabrielle 'lorna) (amb 'mary 'melissa, 'rosalind, 'gabrielle 'lorna))))
+        (require (not (eq? (daughter hall) (yacht hall))))
+        (require (eq? (yacht hall) 'rosalind))
+        (let ((barnacle (cons (amb 'mary 'melissa, 'rosalind, 'gabrielle 'lorna) (amb 'mary 'melissa, 'rosalind, 'gabrielle 'lorna))))
+          (require (eq? (yacht barnacle) 'gabrielle))
+          (require (eq? (daughter barnacle) 'melissa))
+          (require (not (eq? (daughter barnacle) (yacht barnacle))))
+          (let ((parker (cons (amb 'mary 'melissa, 'rosalind, 'gabrielle 'lorna) (amb 'mary 'melissa, 'rosalind, 'gabrielle 'lorna))))
+            (require (not (eq? (daughter parker) (yacht parker))))
+            (require (eq? (daughter parker) (yacht (filter (list moore downing hall barnacle parker) (lambda (x) (eq? (daughter x) 'gabrielle))))))
+            (require (distinct? (list (daughter moore) (daughter downing) (daughter hall) (daughter barnacle) (daughter parker))))
+            (require (distinct? (list (yacht moore) (yacht downing) (yacht hall) (yacht barnacle) (yacht parker))))
+            (list (list 'moore-d (daughter moore))
+                  (list 'downing-d (daughter downing))
+                  (list 'hall-d (daughter hall))
+                  (list 'barnacle-d (daughter barnacle))
+                  (list 'parker-d (daughter parker)))))))))
 
 ;; Solution B.
 
