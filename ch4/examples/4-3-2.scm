@@ -61,4 +61,51 @@
 ;; (parse '(the cat eats))
 ;; => (sentence (noun-phrase (article the) (noun cat)) (verb eats))
 
+(define prepositions '(prep for to in by with))
+
+(define (parse-prepositional-phrase)
+  (list 'prep-phrase
+        (parse-word prepositions)
+        (parse-noun-phrase)))
+
+(define (parse-sentence)
+  (list 'sentence (parse-noun-phrase) (parse-verb-phrase)))
+
+(define (parse-verb-phrase)
+  (define (maybe-extend verb-phrase)
+    (amb verb-phrase
+         (maybe-extend
+          (list 'verb-phrase
+                verb-phrase
+                (parse-prepositional-phrase)))))
+  (maybe-extend (parse-word verbs)))
+
+
+;; ex
+;; '(sleeps in the class)
+;; (parse-verb-phrase)
+;; ->
+;;  sequence: (maybe-extend '(verb sleeps))
+;;  *unparsed*: '(in the class)
+;;
+;; ->
+;;  sequence: (amd '(verb sleeps)
+;;                 (maybe-extend
+;;                   (list 'verb-phrase
+;;                         '(verb sleeps)
+;;                         (list 'prep-phrase '(prep in) '(article the) '(noun class)))))
+;;  *unparsed*: '()
+;;
+;; ->
+;;;; At the next recursion, (parse-prepositional-phrase) results in '(amb) -> fail
+;;
+;;  sequence: (amd '(verb sleeps)
+;;                 (amb
+;;                   (list 'verb-phrase
+;;                         '(verb sleeps)
+;;                         (list 'prep-phrase '(prep in) '(article the) '(noun class)))))
+;;  *unparsed*: '()
+
+
+
 ;; to be continued
