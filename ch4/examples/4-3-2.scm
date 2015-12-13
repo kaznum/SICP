@@ -106,6 +106,33 @@
 ;;                         (list 'prep-phrase '(prep in) '(article the) '(noun class)))))
 ;;  *unparsed*: '()
 
+(define (parse-simple-noun-phrase)
+  (list 'simple-noun-phrase
+        (parse-word articles)
+        (parse-word nouns)))
+
+(define (parse-noun-phrase)
+  (define (maybe-extend noun-phrase)
+    (amb noun-phrase
+         (maybe-extend
+          (list 'noun-phrase
+                noun-phrase
+                (parse-prepositional-phrase)))))
+  (maybe-extend (parse-simple-noun-phrase)))
+
+;; (parse '(the student with the cat sleeps in the class))
+;; (sentence (noun-phrase
+;;            (simple-noun-phrase (article the) (noun student))
+;;            (prep-phrase
+;;             (prep with)
+;;             (simple-noun-phrase (article the) (noun cat))))
+;;           (verb-phrase
+;;            (verb sleeps)
+;;            (prep-phrase
+;;             (prep in)
+;;             (simple-noun-phrase (article the) (noun class)))))
+
+;; (parse '(the professor lectures to the student with the cat))
 
 
 ;; to be continued
