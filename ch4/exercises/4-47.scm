@@ -50,7 +50,7 @@
 ;; 2.
 
 ;; If 'amb' evaluation order is interchanged, and '(the cat sleeps in the bed) is applied,
-;; The verb-phrase becomes infinite loop
+;; the verb-phrase becomes infinite loop
 ;; (amd (parse-word verbs)
 ;;      (list 'verb-parse
 ;;            (amb (parse-word verbs)
