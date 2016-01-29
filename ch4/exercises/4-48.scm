@@ -62,9 +62,22 @@
         (parse-word nouns)))
 
 (define (parse-noun-phrase)
-  ...)
-;; to be continued
+  (define (maybe-extend noun-phrase)
+    (amb noun-phrase
+         (maybe-extend
+          (list 'noun-phrase
+                noun-phrase
+                (parse-prepositional-phrase)))))
+  (define (maybe-prepend-adjective prefix)
+    (amb (cons 'prepended-adjectives prefix)
+         (maybe-prepend-adjective
+          (append prefix (list (parse-word articles))))))
+  (define (parse-adjectived-noun-phrase)
+    (amb
+     (parse-simple-noun-phrase)
+     (list 'adjectived-noun-phrase (parse-word articles) (maybe-prepend-adjective '()) (parse-word nouns))))
 
+  (maybe-extend (parse-adjectived-noun-phrase)))
 
 ;; support adverbs to be followed by a verb
 ;; they are prepositioned to a verb
