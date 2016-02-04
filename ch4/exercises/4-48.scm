@@ -36,24 +36,26 @@
                 (parse-prepositional-phrase)))))
   (maybe-extend (parse-word verbs)))
 
-(define (parse-simple-noun-phrase)
-  (list 'simple-noun-phrase
-        (parse-word articles)
-        (parse-word nouns)))
+;; Do not use this function in this exercise
+;; (define (parse-simple-noun-phrase)
+;;   (list 'simple-noun-phrase
+;;         (parse-word articles)
+;;         (parse-word nouns)))
 
-(define (parse-noun-phrase)
-  (define (maybe-extend noun-phrase)
-    (amb noun-phrase
-         (maybe-extend
-          (list 'noun-phrase
-                noun-phrase
-                (parse-prepositional-phrase)))))
-  (maybe-extend (parse-simple-noun-phrase)))
+;; Do not use this function in this exercise
+;; (define (parse-noun-phrase)
+;;   (define (maybe-extend noun-phrase)
+;;     (amb noun-phrase
+;;          (maybe-extend
+;;           (list 'noun-phrase
+;;                 noun-phrase
+;;                 (parse-prepositional-phrase)))))
+;;   (maybe-extend (parse-simple-noun-phrase)))
 
 ;; Answer ex4.48
 ;; support adjectives to be followed by a noun
 ;; they are prepositioned to a noun
-(define adjectives '(adjective cute good bad))
+(define adjectives '(adjective cute good bad big small))
 
 (define (parse-adjectived-noun-phrase)
   (list 'adjectived-noun-phrase
@@ -68,16 +70,22 @@
           (list 'noun-phrase
                 noun-phrase
                 (parse-prepositional-phrase)))))
-  (define (maybe-prepend-adjective prefix)
-    (amb (cons 'prepended-adjectives prefix)
-         (maybe-prepend-adjective
-          (append prefix (list (parse-word articles))))))
-  (define (parse-adjectived-noun-phrase)
-    (amb
-     (parse-simple-noun-phrase)
-     (list 'adjectived-noun-phrase (parse-word articles) (maybe-prepend-adjective '()) (parse-word nouns))))
 
-  (maybe-extend (parse-adjectived-noun-phrase)))
+  (define (adjective-noun-phrase article pre-adjectives)
+    (amb (list 'adjectived-noun-phrase article
+               (list 'adjectives pre-adjectives)
+               (parse-word nouns))
+         (adjective-noun-phrase article
+                                (append pre-adjectives
+                                        (list (parse-word adjectives))))))
+
+  (define (parse-simple-or-adjectived-noun-phrase article)
+    (amb (list 'simple-noun-phrase article (parse-word noun))
+         (adjective-noun-phrase article '())))
+
+  (maybe-extend (parse-simple-or-adjectived-noun-phrase (parse-word article))))
+
+
 
 ;; support adverbs to be followed by a verb
 ;; they are prepositioned to a verb
