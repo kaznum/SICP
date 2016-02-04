@@ -27,14 +27,15 @@
 (define (parse-sentence)
   (list 'sentence (parse-noun-phrase) (parse-verb-phrase)))
 
-(define (parse-verb-phrase)
-  (define (maybe-extend verb-phrase)
-    (amb verb-phrase
-         (maybe-extend
-          (list 'verb-phrase
-                verb-phrase
-                (parse-prepositional-phrase)))))
-  (maybe-extend (parse-word verbs)))
+;; Do not use this function in this exercise
+;; (define (parse-verb-phrase)
+;;   (define (maybe-extend verb-phrase)
+;;     (amb verb-phrase
+;;          (maybe-extend
+;;           (list 'verb-phrase
+;;                 verb-phrase
+;;                 (parse-prepositional-phrase)))))
+;;   (maybe-extend (parse-word verbs)))
 
 ;; Do not use this function in this exercise
 ;; (define (parse-simple-noun-phrase)
@@ -81,16 +82,27 @@
 
   (define (parse-simple-or-adjectived-noun-phrase article)
     (amb (list 'simple-noun-phrase article (parse-word noun))
-         (adjective-noun-phrase article '())))
+         (adjective-noun-phrase article '(parse-word adjectives))))
 
   (maybe-extend (parse-simple-or-adjectived-noun-phrase (parse-word article))))
 
 
 
 ;; support adverbs to be followed by a verb
-;; they are prepositioned to a verb
+;; they are followed by a verb
 (define adverbs '(adverb finally rapidly occasionally)
 (define (parse-verb-phrase)
-  ...)
+  (define (maybe-extend verb-phrase)
+    (amb verb-phrase
+         (maybe-extend
+          (list 'verb-phrase
+                verb-phrase
+                (parse-prepositional-phrase)))))
+  (define (maybe-adverbed-verb pre-adverbs)
+    (amb
+     (list 'adverbed-verb (list 'adverbs pre-adverbs) (parse-word verbs))
+     (maybe-adverbed-verb (append pre-adverbs (list (parse-word adverbs))))))
 
-;; to be continued
+  (amb
+   (maybe-extend (parse-word verbs))
+   (maybe-extend (maybe-adverbed-verb (list (parse-word adverbs))))))
