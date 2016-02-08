@@ -1,54 +1,96 @@
 ;; From the text ch4.1.7
 (define (eval exp env) ((analyze exp) env))
 
-(define (analyze-self-evaluating exp)
-  (lambda (env) exp))
+(define (text-of-quotation exp) (cadr exp))
 
-(define (analyze-quoted exp)
-  (let ((qval (text-of-quotation exp)))
-    (lambda (env) qval)))
+(define (tagged-list? exp tag)
+  (if (pair? exp)
+      (eq? (car exp) tag)
+      false))
 
-(define (analyze-variable exp)
-  (lambda (env) (lookup-variable-value exp env)))
+(define (enclosing-environment env) (cdr env))
+(define (first-frame env) (car env))
+(define the-empty-environment '())
+(define (frame-variables frame) (car frame))
+(define (frame-values frame) (cdr frame))
 
-(define (analyze-assignment exp)
-  (let ((var (assignment-variable exp))
-	(vproc (analyze (assignment-value exp))))
-    (lambda (env)
-      (set-variable-value! var (vproc env) env)
-      'ok)))
+(define (lookup-variable-value var env)
+  (define (env-loop env)
+    (define (scan vars vals)
+      (cond ((null? vars)
+             (env-loop (enclosing-environment env)))
+            ((eq? var (car vars)) (car vals))
+            (else (scan (cdr vars) (cdr vals)))))
+    (if (eq? env the-empty-environment)
+        (error "Unbound variable" var)
+        (let ((frame (first-frame env)))
+          (scan (frame-variables frame)
+                (frame-values frame)))))
+  (env-loop env))
 
-(define (analyze-definition exp)
-  (let ((var (definition-variable exp))
-	(vproc (analyze (definition-value exp))))
-    (lambda (env)
-      (define-variable! var (vproc env) env)
-      'ok)))
+(define (lambda-parameters exp) (cadr exp))
+(define (lambda-body exp) (cddr exp))
+(define (make-procedure parameters body env)
+  (list 'procedure parameters body env))
 
-(define (analyze-if exp)
-  (let ((pproc (analyze (if-predicate exp)))
-	(cproc (analyze (if-consequent exp)))
-	(aproc (analyze (if-alternative exp))))
-    (lambda (env) (if (true? (pproc env))
-		      (cproc env)
-		      (aproc env)))))
+(define (if-predicate exp) (cadr exp))
+(define (if-consequent exp) (caddr exp))
+(define (if-alternative exp)
+  (if (not (null? (cdddr exp)))
+      (cadddr exp)
+      'false))
 
-(define (analyze-lambda exp)
-  (let ((vars (lambda-parameters exp))
-	(bproc (analyze-sequence (lambda-body exp))))
-    (lambda (env) (make-procedure vars bproc env))))
 
-(define (analyze-sequence exps)
-  (define (sequentially proc1 proc2)
-    (lambda (env) (proc1 env) (proc2 env)))
-  (define (loop first-proc rest-procs)
-    (if (null? rest-procs)
-	first-proc
-	(loop (sequentially first-proc (car rest-procs))
-	      (cdr rest-procs))))
-  (let ((procs (map analyze exps)))
-    (if (null? procs) (error "Empty sequence: ANALYZE"))
-    (loop (car procs) (cdr procs))))
+;;; The followings will be redefined in this chapter.
+
+;; (define (analyze-self-evaluating exp)
+;;   (lambda (env) exp))
+
+;; (define (analyze-quoted exp)
+;;   (let ((qval (text-of-quotation exp)))
+;;     (lambda (env) qval)))
+
+;; (define (analyze-variable exp)
+;;   (lambda (env) (lookup-variable-value exp env)))
+
+;; (define (analyze-assignment exp)
+;;   (let ((var (assignment-variable exp))
+;; 	(vproc (analyze (assignment-value exp))))
+;;     (lambda (env)
+;;       (set-variable-value! var (vproc env) env)
+;;       'ok)))
+
+;; (define (analyze-definition exp)
+;;   (let ((var (definition-variable exp))
+;; 	(vproc (analyze (definition-value exp))))
+;;     (lambda (env)
+;;       (define-variable! var (vproc env) env)
+;;       'ok)))
+
+;; (define (analyze-if exp)
+;;   (let ((pproc (analyze (if-predicate exp)))
+;; 	(cproc (analyze (if-consequent exp)))
+;; 	(aproc (analyze (if-alternative exp))))
+;;     (lambda (env) (if (true? (pproc env))
+;; 		      (cproc env)
+;; 		      (aproc env)))))
+
+;; (define (analyze-lambda exp)
+;;   (let ((vars (lambda-parameters exp))
+;; 	(bproc (analyze-sequence (lambda-body exp))))
+;;     (lambda (env) (make-procedure vars bproc env))))
+
+;; (define (analyze-sequence exps)
+;;   (define (sequentially proc1 proc2)
+;;     (lambda (env) (proc1 env) (proc2 env)))
+;;   (define (loop first-proc rest-procs)
+;;     (if (null? rest-procs)
+;; 	first-proc
+;; 	(loop (sequentially first-proc (car rest-procs))
+;; 	      (cdr rest-procs))))
+;;   (let ((procs (map analyze exps)))
+;;     (if (null? procs) (error "Empty sequence: ANALYZE"))
+;;     (loop (car procs) (cdr procs))))
 
 (define (analyze-application exp)
   (let ((fproc (analyze (operator exp)))
@@ -124,4 +166,73 @@
 
 ;;;; Simple expressions
 
-;; To be continued
+(define (analyze-self-evaluating exp)
+  (lambda (env succeed fail)
+    (succeed exp fail)))
+
+(define (analyze-quoted exp)
+  (let ((qval (text-of-quotation exp)))
+     (lambda (env succeed fail)
+       (succeed qval fail))))
+
+(define (analyze-variable exp)
+  (lambda (env succeed fail)
+    (succeed (lookup-variable-value exp env) fail)))
+
+(define (analyze-lambda exp)
+  (let ((vars (lambda-parameters exp))
+        (bproc (analyze-sequence (lambda-body exp))))
+    (lambda (env succeed fail) (succeed (make-procedure vars bproc env) fail))))
+
+;;;; Conditionals and sequences
+
+(define (analyze-if exp)
+  (let ((pproc (analyze (if-predicate exp)))
+        (cproc (analyze (if-consequent exp)))
+        (aproc (analyze (if-alternative exp))))
+    (lambda (env succeed fail)
+      (pproc env
+             ;; The success continuation whose predicate is true/false or fail
+             (lambda (pred-value fail2)
+               (if (true? pred-value)
+                   (cproc env succeed fail2)
+                   (aproc env succeed fail2)))
+             ;; The failure continuation of evaluating the if's predicate
+             fail))))
+
+(define (analyze-sequence exps)
+   (define (sequentially proc1 prob2)
+     (lambda (env succeed fail)
+       (proc1 env
+              (lambda (proc1-value fail2)
+                (proc2 env succeed fail2))
+              fail)))
+   (define (loop first-proc rest-procs)
+     (if (null? rest-procs)
+         first-proc
+         (loop (sequentially first-proc (car rest-procs))
+               (cdr rest-procs))))
+   (let ((procs (map analyze exps)))
+     (if (null? procs) (error "Empty sequence: ANALYZE"))
+     (loop (car procs) (cdr procs))))
+
+
+;;;; Definitions and assignments
+
+;; to be continued
+
+;; (define (analyze-assignment exp)
+;;   (let ((var (assignment-variable exp))
+;; 	(vproc (analyze (assignment-value exp))))
+;;     (lambda (env)
+;;       (set-variable-value! var (vproc env) env)
+;;       'ok)))
+
+;; (define (analyze-definition exp)
+;;   (let ((var (definition-variable exp))
+;; 	(vproc (analyze (definition-value exp))))
+;;     (lambda (env)
+;;       (define-variable! var (vproc env) env)
+;;       'ok)))
+
+
