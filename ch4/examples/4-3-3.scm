@@ -219,14 +219,18 @@
 
 ;;;; Definitions and assignments
 
+(define (analyze-assignment exp)
+  (let ((var (assignment-variable exp))
+ 	(vproc (analyze (assignment-value exp))))
+    (lambda (env succeed fail)
+      (vproc env
+             (lambda (val fail2)
+               (define-variable! var val env)
+               (succeed 'ok fail2))
+             fail))))
+
 ;; to be continued
 
-;; (define (analyze-assignment exp)
-;;   (let ((var (assignment-variable exp))
-;; 	(vproc (analyze (assignment-value exp))))
-;;     (lambda (env)
-;;       (set-variable-value! var (vproc env) env)
-;;       'ok)))
 
 ;; (define (analyze-definition exp)
 ;;   (let ((var (definition-variable exp))
