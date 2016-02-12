@@ -144,25 +144,25 @@
 ;;     (if (null? procs) (error "Empty sequence: ANALYZE"))
 ;;     (loop (car procs) (cdr procs))))
 
-(define (analyze-application exp)
-  (let ((fproc (analyze (operator exp)))
-	(aprocs (map analyze (operands exp))))
-    (lambda (env)
-      (execute-application
-       (fproc env)
-       (map (lambda (aproc) (aproc env))
-	    aprocs)))))
-(define (execute-application proc args)
-  (cond ((primitive-procedure? proc)
-	 (apply-primitive-procedure proc args))
-	((compound-procedure? proc)
-	 ((procedure-body proc)
-	  (extend-environment (procedure-parameters proc)
-			      args
-			      (procedure-environment proc))))
-	(else
-	 (error "Unknown procedure type: EXECUTE-APPLICATION"
-		proc))))
+;; (define (analyze-application exp)
+;;   (let ((fproc (analyze (operator exp)))
+;; 	(aprocs (map analyze (operands exp))))
+;;     (lambda (env)
+;;       (execute-application
+;;        (fproc env)
+;;        (map (lambda (aproc) (aproc env))
+;; 	    aprocs)))))
+;; (define (execute-application proc args)
+;;   (cond ((primitive-procedure? proc)
+;; 	 (apply-primitive-procedure proc args))
+;; 	((compound-procedure? proc)
+;; 	 ((procedure-body proc)
+;; 	  (extend-environment (procedure-parameters proc)
+;; 			      args
+;; 			      (procedure-environment proc))))
+;; 	(else
+;; 	 (error "Unknown procedure type: EXECUTE-APPLICATION"
+;; 		proc))))
 
 
 ;; code from ex4.22 (analysis of 'let')
@@ -297,5 +297,48 @@
              fail))))
 
 ;;;; Procedure applications
+
+(define (analyze-application exp)
+  (let ((fproc (analyze (operator exp)))
+ 	(aprocs (map analyze (operands exp))))
+    (lambda (evn succeed fail)
+      (fproc env
+             (lambda (proc fail2)
+               (get-args aprocs
+                         env
+                         (lambda (args fail3)
+                           (execute-application
+                            proc args succeed fail3))
+                         fail2))
+             fail))))
+
+(define (get-args aprocs env succeed fail)
+  (if (null? aprocs)
+      (succeed '() fail)
+      ((car aprocs)
+       env
+       (lambda (arg fail2)
+         (get-args (cdr aprocs) env
+                   (lambda (args fail3)
+                     (succeed (cons arg args) fail3))
+                   fail2))
+       fail)))
+
+(define (execute-application proc args succeed fail)
+  (cond ((primitive-procedure? proc)
+         (succeed (apply-primitive-procedure proc args)
+                  fail))
+        ((compound-procedure? proc)
+         ((procedure-body proc)
+          (extend-environment
+           (procedure-parameters proc)
+           args
+           (procedure-environment proc))
+          succeed fail))
+        (else
+         (error "Unknown procedure type: EXECUTE-APPLICATION"
+                proc))))
+
+;;;; Evaluating amb expressions
 
 ;; to be continued
