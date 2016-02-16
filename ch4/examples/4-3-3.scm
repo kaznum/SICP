@@ -8,6 +8,16 @@
       (eq? (car exp) tag)
       false))
 
+(define (self-evaluating? exp)
+  (cond ((number? exp) true)
+        ((string? exp) true)
+        (else false)))
+
+(define (variable? exp) (symbol? exp))
+
+(define (quoted? exp) (tagged-list? exp 'quote))
+(define (text-of-quotation exp) (cadr exp))
+
 (define (enclosing-environment env) (cdr env))
 (define (first-frame env) (car env))
 (define the-empty-environment '())
@@ -27,11 +37,6 @@
           (scan (frame-variables frame)
                 (frame-values frame)))))
   (env-loop env))
-
-(define (lambda-parameters exp) (cadr exp))
-(define (lambda-body exp) (cddr exp))
-(define (make-procedure parameters body env)
-  (list 'procedure parameters body env))
 
 (define (if-predicate exp) (cadr exp))
 (define (if-consequent exp) (caddr exp))
@@ -59,7 +64,7 @@
              (add-bind-to-frame! var val frame))
             ((eq? var (car vars)) (set-car! vals val))
             (else (scan (cdr vars) (cdr vals)))))
-    (scan (frame-variables frame) (frame-values frame)))
+    (scan (frame-variables frame) (frame-values frame))))
 
 (define (assignment? exp) (tagged-list? exp 'set!))
 (define (assignment-variable exp) (cadr exp))
@@ -92,6 +97,52 @@
           (scan (frame-variables frame)
                 (frame-values frame)))))
   (env-loop env))
+
+(define (if? exp) (tagged-list? exp 'if))
+(define (if-predicate exp) (cadr exp))
+(define (if-consequent exp) (caddr exp))
+(define (if-alternative exp)
+  (if (not (null? (cdddr exp)))
+      (cadddr exp)
+      'false))
+
+(define (lambda? exp) (tagged-list? exp 'lambda))
+(define (lambda-parameters exp) (cadr exp))
+(define (lambda-body exp) (cddr exp))
+(define (make-procedure parameters body env)
+  (list 'procedure parameters body env))
+
+(define (begin? exp) (tagged-list? exp 'begin))
+(define (begin-actions exp) (cdr exp))
+
+(define (cond? exp) (tagged-list? exp 'cond))
+(define (cond-clauses exp) (cdr exp))
+(define (cond-else-clause? clause)
+  (eq? (cond-predicate clause) 'else))
+(define (cond-predicate clause) (car clause))
+(define (cond-actions clause) (cdr clause))
+(define (cond->if exp) (expand-clauses (cond-clauses exp)))
+(define (expand-clauses clauses)
+  (if (null? clauses)
+      'false
+      (let ((first (car clauses))
+            (rest (cdr clauses)))
+        (if (cond-else-clause? first)
+            (if (null? rest)
+                (sequence->exp (cond-actions first))
+                (error "ELSE clause isn't last: COND->IF"
+                       clauses))
+            (make-if (cond-predicate first)
+                     (sequence->exp (cond-actions first))
+                     (expand-clauses rest))))))
+
+(define (application? exp) (pair? exp))
+(define (operator exp) (car exp))
+(define (operands exp) (cdr exp))
+
+(define (true? x) (not (eq? x false)))
+(define (false? x) (eq? x false))
+
 
 ;;; The followings will be redefined in this chapter.
 
