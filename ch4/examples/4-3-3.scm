@@ -410,7 +410,7 @@
 (define (analyze-application exp)
   (let ((fproc (analyze (operator exp)))
  	(aprocs (map analyze (operands exp))))
-    (lambda (evn succeed fail)
+    (lambda (env succeed fail)
       (fproc env
              (lambda (proc fail2)
                (get-args aprocs
