@@ -275,8 +275,8 @@
 
 (define (analyze-quoted exp)
   (let ((qval (text-of-quotation exp)))
-     (lambda (env succeed fail)
-       (succeed qval fail))))
+    (lambda (env succeed fail)
+      (succeed qval fail))))
 
 (define (analyze-variable exp)
   (lambda (env succeed fail)
@@ -304,20 +304,20 @@
              fail))))
 
 (define (analyze-sequence exps)
-   (define (sequentially proc1 prob2)
-     (lambda (env succeed fail)
-       (proc1 env
-              (lambda (proc1-value fail2)
-                (proc2 env succeed fail2))
-              fail)))
-   (define (loop first-proc rest-procs)
-     (if (null? rest-procs)
-         first-proc
-         (loop (sequentially first-proc (car rest-procs))
-               (cdr rest-procs))))
-   (let ((procs (map analyze exps)))
-     (if (null? procs) (error "Empty sequence: ANALYZE"))
-     (loop (car procs) (cdr procs))))
+  (define (sequentially proc1 prob2)
+    (lambda (env succeed fail)
+      (proc1 env
+             (lambda (proc1-value fail2)
+               (proc2 env succeed fail2))
+             fail)))
+  (define (loop first-proc rest-procs)
+    (if (null? rest-procs)
+        first-proc
+        (loop (sequentially first-proc (car rest-procs))
+              (cdr rest-procs))))
+  (let ((procs (map analyze exps)))
+    (if (null? procs) (error "Empty sequence: ANALYZE"))
+    (loop (car procs) (cdr procs))))
 
 
 ;;;; Definitions and assignments
