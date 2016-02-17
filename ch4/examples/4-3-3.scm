@@ -123,6 +123,9 @@
 (define (lambda? exp) (tagged-list? exp 'lambda))
 (define (lambda-parameters exp) (cadr exp))
 (define (lambda-body exp) (cddr exp))
+(define (make-lambda parameters body)
+  (cons 'lambda (cons parameters body)))
+
 (define (make-procedure parameters body env)
   (list 'procedure parameters body env))
 (define (compound-procedure? p)
