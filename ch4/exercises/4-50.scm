@@ -507,3 +507,5 @@
 
 
 ;; to be continued
+
+;; consideration about ex4.49
