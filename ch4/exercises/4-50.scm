@@ -255,21 +255,24 @@
 (define (amb? exp) (tagged-list? exp 'amb))
 (define (amb-choices exp) (cdr exp))
 
-(define (analyze exp)
-  (cond ((self-evaluating? exp) (analyze-self-evaluating exp))
-	((quoted? exp) (analyze-quoted exp))
-	((variable? exp) (analyze-variable exp))
-	((let? exp) (analyze-let exp))
-        ;; added for amb evaluator
-        ((amb? exp) (analyze-amb exp))
-	((assignment? exp) (analyze-assignment exp))
-	((definition? exp) (analyze-definition exp))
-	((if? exp) (analyze-if exp))
-	((lambda? exp) (analyze-lambda exp))
-	((begin? exp) (analyze-sequence (begin-actions exp)))
-	((cond? exp) (analyze (cond->if exp)))
-	((application? exp) (analyze-application exp))
-	(else (error "Unknown expression type: ANALYZE" exp))))
+;;;;
+;;;; redefined in ex4.50
+;;;;
+;; (define (analyze exp)
+;;   (cond ((self-evaluating? exp) (analyze-self-evaluating exp))
+;; 	((quoted? exp) (analyze-quoted exp))
+;; 	((variable? exp) (analyze-variable exp))
+;; 	((let? exp) (analyze-let exp))
+;;         ;; added for amb evaluator
+;;         ((amb? exp) (analyze-amb exp))
+;; 	((assignment? exp) (analyze-assignment exp))
+;; 	((definition? exp) (analyze-definition exp))
+;; 	((if? exp) (analyze-if exp))
+;; 	((lambda? exp) (analyze-lambda exp))
+;; 	((begin? exp) (analyze-sequence (begin-actions exp)))
+;; 	((cond? exp) (analyze (cond->if exp)))
+;; 	((application? exp) (analyze-application exp))
+;; 	(else (error "Unknown expression type: ANALYZE" exp))))
 
 (define (ambeval exp env succeed fail)
   ((analyze exp) env succeed fail))
@@ -441,3 +444,66 @@
 
 ;;;; Answer ex4.50
 
+(define (ramb? exp) (tagged-list? exp 'ramb))
+
+(define (analyze exp)
+  (cond ((self-evaluating? exp) (analyze-self-evaluating exp))
+	((quoted? exp) (analyze-quoted exp))
+	((variable? exp) (analyze-variable exp))
+	((let? exp) (analyze-let exp))
+        ((amb? exp) (analyze-amb exp))
+        ;; added for ex4.50
+        ((ramb? exp) (analyze-ramb exp))
+	((assignment? exp) (analyze-assignment exp))
+	((definition? exp) (analyze-definition exp))
+	((if? exp) (analyze-if exp))
+	((lambda? exp) (analyze-lambda exp))
+	((begin? exp) (analyze-sequence (begin-actions exp)))
+	((cond? exp) (analyze (cond->if exp)))
+	((application? exp) (analyze-application exp))
+	(else (error "Unknown expression type: ANALYZE" exp))))
+
+(define (analyze-ramb exp)
+  (let ((cprocs (map analyze (amb-choices exp))))
+    (lambda (env succeed fail)
+      (define (try-next choices)
+        (if (null? choices)
+            (fail)
+            ;;;; change from analyze-amb
+            ;; ((car choices) env succeed (lambda () (try-next (cdr choices))))))
+            (let ((index (random (length choices))))
+              ((list-ref choices index)
+               env
+               succeed
+               (lambda () (try-next (append (list-head choices index) (cdr (list-tail choices index)))))))))
+      (try-next cprocs))))
+
+;; ;;;; test
+;; ;;; Amb-eval input:
+;;  (ramb 1 2 3 4 5)
+;; ;;; Starting a new problem 
+;; ;;; Amb-eval value:
+;; 1
+;; ;;; Amb-eval input:
+;; try-again
+;; ;;; Amb-eval value:
+;; 4
+;; ;;; Amb-eval input:
+;; try-again
+;; ;;; Amb-eval value:
+;; 3
+;; ;;; Amb-eval input:
+;; try-again
+;; ;;; Amb-eval value:
+;; 5
+;; ;;; Amb-eval input:
+;; try-again
+;; ;;; Amb-eval value:
+;; 2
+;; ;;; Amb-eval input:
+;; try-again
+;; ;;; There are no more value of
+;; (ramb 1 2 3 4 5)
+
+
+;; to be continued
