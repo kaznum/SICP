@@ -61,12 +61,12 @@
 ;;;; once a word selected, the word is appended to the list of the words to rotate the word-list
 (define (rotate-word-list word-list)
   (let ((type (car word-list))
-        (word (cadr word-list)))
-    (list type (append (cddr word-list) (list word)))))
+        (word (car (cdr word-list))))
+    (append (list type) (append (cdr (cdr word-list)) (list word)))))
 
 (define (parse-word word-list)
   (let ((type (car word-list))
-        (word (cadr word-list)))
+        (word (car (cdr word-list))))
     (cond
      ((eq? type 'noun) (set! nouns (rotate-word-list nouns)))
      ((eq? type 'verb) (set! verbs (rotate-word-list verbs)))
