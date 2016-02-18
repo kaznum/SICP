@@ -119,6 +119,8 @@
   (if (not (null? (cdddr exp)))
       (cadddr exp)
       'false))
+(define (make-if predicate consequent alternative)
+  (list 'if predicate consequent alternative))
 
 (define (lambda? exp) (tagged-list? exp 'lambda))
 (define (lambda-parameters exp) (cadr exp))
@@ -136,6 +138,16 @@
 
 (define (begin? exp) (tagged-list? exp 'begin))
 (define (begin-actions exp) (cdr exp))
+(define (last-exp? seq) (null? (cdr seq)))
+(define (first-exp seq) (car seq))
+(define (rest-exps seq) (cdr seq))
+
+(define (sequence->exp seq)
+  (cond ((null? seq) seq)
+        ((last-exp? seq) (first-exp seq))
+        (else (make-begin seq))))
+
+(define (make-begin seq) (cons 'begin seq))
 
 (define (cond? exp) (tagged-list? exp 'cond))
 (define (cond-clauses exp) (cdr exp))
@@ -229,9 +241,12 @@
         (list '* *)
         (list '= =)
         (list '- -)
+        (list 'eq? eq?)
         (list 'get-universal-time get-universal-time)
         (list 'display display)
         (list 'newline newline)
+        (list 'list list)
+        (list 'append append)
         ;; more
         ))
 (define the-global-environment (setup-environment))
@@ -314,7 +329,7 @@
              fail))))
 
 (define (analyze-sequence exps)
-  (define (sequentially proc1 prob2)
+  (define (sequentially proc1 proc2)
     (lambda (env succeed fail)
       (proc1 env
              (lambda (proc1-value fail2)
@@ -506,6 +521,56 @@
 ;; (ramb 1 2 3 4 5)
 
 
-;; to be continued
-
 ;; consideration about ex4.49
+
+;; when 'amb' is used, the (prep-phrase) are appended to  verb-phrase and not to noun-phrase.
+;; on the other hand, 'ramb' generate randomly the sentences which have prep-phrases both on noun-phrase and verb-phrase.
+
+;;;;
+;;;; 'amb' used.....
+;;;;
+
+;; ;;; Amb-eval input:
+;; (parse-sentence)
+;; ;;; Starting a new problem 
+;; ;;; Amb-eval value:
+;; (sentence (simple-noun-phrase (article the) (noun student)) (verb studies))
+;; ;;; Amb-eval input:
+;; try-again
+;; ;;; Amb-eval value:
+;; (sentence (simple-noun-phrase (article the) (noun student)) (verb-phrase (verb studies) (prep-phrase (prep for) (simple-noun-phrase (article a) (noun professor)))))
+;; ;;; Amb-eval input:
+;; try-again
+;; ;;; Amb-eval value:
+;; (sentence (simple-noun-phrase (article the) (noun student)) (verb-phrase (verb-phrase (verb studies) (prep-phrase (prep for) (simple-noun-phrase (article a) (noun professor)))) (prep-phrase (prep for) (simple-noun-phrase (article the) (noun cat)))))
+;; ;;; Amb-eval input:
+;; try-again
+;; ;;; Amb-eval value:
+;; (sentence (simple-noun-phrase (article the) (noun student)) (verb-phrase (verb-phrase (verb-phrase (verb studies) (prep-phrase (prep for) (simple-noun-phrase (article a) (noun professor)))) (prep-phrase (prep for) (simple-noun-phrase (article the) (noun cat)))) (prep-phrase (prep for) (simple-noun-phrase (article a) (noun class)))))
+;; ;;; Amb-eval input:
+;; try-again
+;; ;;; Amb-eval value:
+;; (sentence (simple-noun-phrase (article the) (noun student)) (verb-phrase (verb-phrase (verb-phrase (verb-phrase (verb studies) (prep-phrase (prep for) (simple-noun-phrase (article a) (noun professor)))) (prep-phrase (prep for) (simple-noun-phrase (article the) (noun cat)))) (prep-phrase (prep for) (simple-noun-phrase (article a) (noun class)))) (prep-phrase (prep for) (simple-noun-phrase (article the) (noun student)))))
+
+;;;;
+;;;; ramb is used...
+;;;;
+
+;; ;;; Amb-eval input:
+;; (parse-sentence)
+
+;; ;;; Starting a new problem 
+;; ;;; Amb-eval value:
+;; (sentence (simple-noun-phrase (article the) (noun student)) (verb studies))
+
+;; ;;; Amb-eval input:
+;; try-again
+
+;; ;;; Amb-eval value:
+;; (sentence (simple-noun-phrase (article the) (noun student)) (verb-phrase (verb studies) (prep-phrase (prep for) (noun-phrase (simple-noun-phrase (article a) (noun professor)) (prep-phrase (prep for) (noun-phrase (noun-phrase (noun-phrase (simple-noun-phrase (article the) (noun cat)) (prep-phrase (prep for) (simple-noun-phrase (article a) (noun class)))) (prep-phrase (prep for) (simple-noun-phrase (article the) (noun student)))) (prep-phrase (prep for) (simple-noun-phrase (article a) (noun professor)))))))))
+
+;; ;;; Amb-eval input:
+;; try-again
+
+;; ;;; Amb-eval value:
+;; (sentence (simple-noun-phrase (article the) (noun student)) (verb-phrase (verb-phrase (verb-phrase (verb-phrase (verb-phrase (verb-phrase (verb-phrase (verb-phrase (verb-phrase (verb-phrase (verb-phrase (verb studies) (prep-phrase (prep for) (noun-phrase (simple-noun-phrase (article a) (noun professor)) (prep-phrase (prep for) (noun-phrase (noun-phrase (noun-phrase (simple-noun-phrase (article the) (noun cat)) (prep-phrase (prep for) (simple-noun-phrase (article a) (noun class)))) (prep-phrase (prep for) (simple-noun-phrase (article the) (noun student)))) (prep-phrase (prep for) (simple-noun-phrase (article a) (noun professor)))))))) (prep-phrase (prep for) (simple-noun-phrase (article the) (noun cat)))) (prep-phrase (prep for) (noun-phrase (noun-phrase (noun-phrase (simple-noun-phrase (article a) (noun class)) (prep-phrase (prep for) (simple-noun-phrase (article the) (noun student)))) (prep-phrase (prep for) (simple-noun-phrase (article a) (noun professor)))) (prep-phrase (prep for) (simple-noun-phrase (article the) (noun cat)))))) (prep-phrase (prep for) (noun-phrase (simple-noun-phrase (article a) (noun class)) (prep-phrase (prep for) (simple-noun-phrase (article the) (noun student)))))) (prep-phrase (prep for) (simple-noun-phrase (article a) (noun professor)))) (prep-phrase (prep for) (simple-noun-phrase (article the) (noun cat)))) (prep-phrase (prep for) (noun-phrase (noun-phrase (simple-noun-phrase (article a) (noun class)) (prep-phrase (prep for) (simple-noun-phrase (article the) (noun student)))) (prep-phrase (prep for) (noun-phrase (simple-noun-phrase (article a) (noun professor)) (prep-phrase (prep for) (noun-phrase (noun-phrase (simple-noun-phrase (article the) (noun cat)) (prep-phrase (prep for) (simple-noun-phrase (article a) (noun class)))) (prep-phrase (prep for) (simple-noun-phrase (article the) (noun student)))))))))) (prep-phrase (prep for) (noun-phrase (simple-noun-phrase (article a) (noun professor)) (prep-phrase (prep for) (noun-phrase (simple-noun-phrase (article the) (noun cat)) (prep-phrase (prep for) (simple-noun-phrase (article a) (noun class)))))))) (prep-phrase (prep for) (simple-noun-phrase (article the) (noun student)))) (prep-phrase (prep for) (noun-phrase (simple-noun-phrase (article a) (noun professor)) (prep-phrase (prep for) (simple-noun-phrase (article the) (noun cat)))))) (prep-phrase (prep for) (simple-noun-phrase (article a) (noun class)))))
