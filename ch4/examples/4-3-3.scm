@@ -58,6 +58,8 @@
   (if (not (null? (cdddr exp)))
       (cadddr exp)
       'false))
+(define (make-if predicate consequent alternative)
+  (list 'if predicate consequent alternative))
 
 (define (definition? exp) (tagged-list? exp 'define))
 (define (definition-variable exp)
@@ -136,6 +138,17 @@
 
 (define (begin? exp) (tagged-list? exp 'begin))
 (define (begin-actions exp) (cdr exp))
+
+(define (last-exp? seq) (null? (cdr seq)))
+(define (first-exp seq) (car seq))
+(define (rest-exps seq) (cdr seq))
+
+(define (sequence->exp seq)
+  (cond ((null? seq) seq)
+        ((last-exp? seq) (first-exp seq))
+        (else (make-begin seq))))
+
+(define (make-begin seq) (cons 'begin seq))
 
 (define (cond? exp) (tagged-list? exp 'cond))
 (define (cond-clauses exp) (cdr exp))
@@ -396,7 +409,7 @@
              fail))))
 
 (define (analyze-sequence exps)
-  (define (sequentially proc1 prob2)
+  (define (sequentially proc1 proc2)
     (lambda (env succeed fail)
       (proc1 env
              (lambda (proc1-value fail2)
