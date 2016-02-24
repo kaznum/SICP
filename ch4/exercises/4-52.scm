@@ -52,15 +52,6 @@
                 (frame-values frame)))))
   (env-loop env))
 
-(define (if-predicate exp) (cadr exp))
-(define (if-consequent exp) (caddr exp))
-(define (if-alternative exp)
-  (if (not (null? (cdddr exp)))
-      (cadddr exp)
-      'false))
-(define (make-if predicate consequent alternative)
-  (list 'if predicate consequent alternative))
-
 (define (definition? exp) (tagged-list? exp 'define))
 (define (definition-variable exp)
   (if (symbol? (cadr exp))
@@ -121,6 +112,8 @@
   (if (not (null? (cdddr exp)))
       (cadddr exp)
       'false))
+(define (make-if predicate consequent alternative)
+  (list 'if predicate consequent alternative))
 
 (define (lambda? exp) (tagged-list? exp 'lambda))
 (define (lambda-parameters exp) (cadr exp))
@@ -241,6 +234,7 @@
         (list 'list list)
         (list 'eq? eq?)
         (list 'not not)
+        (list 'even? even?)
         (list '+ +)
         (list '* *)
         (list '= =)
@@ -270,21 +264,22 @@
 (define (amb? exp) (tagged-list? exp 'amb))
 (define (amb-choices exp) (cdr exp))
 
-(define (analyze exp)
-  (cond ((self-evaluating? exp) (analyze-self-evaluating exp))
-	((quoted? exp) (analyze-quoted exp))
-	((variable? exp) (analyze-variable exp))
-	((let? exp) (analyze-let exp))
-        ;; added for amb evaluator
-        ((amb? exp) (analyze-amb exp))
-	((assignment? exp) (analyze-assignment exp))
-	((definition? exp) (analyze-definition exp))
-	((if? exp) (analyze-if exp))
-	((lambda? exp) (analyze-lambda exp))
-	((begin? exp) (analyze-sequence (begin-actions exp)))
-	((cond? exp) (analyze (cond->if exp)))
-	((application? exp) (analyze-application exp))
-	(else (error "Unknown expression type: ANALYZE" exp))))
+;; Replaced in ex4.52
+;; (define (analyze exp)
+;;   (cond ((self-evaluating? exp) (analyze-self-evaluating exp))
+;; 	((quoted? exp) (analyze-quoted exp))
+;; 	((variable? exp) (analyze-variable exp))
+;; 	((let? exp) (analyze-let exp))
+;;         ;; added for amb evaluator
+;;         ((amb? exp) (analyze-amb exp))
+;; 	((assignment? exp) (analyze-assignment exp))
+;; 	((definition? exp) (analyze-definition exp))
+;; 	((if? exp) (analyze-if exp))
+;; 	((lambda? exp) (analyze-lambda exp))
+;; 	((begin? exp) (analyze-sequence (begin-actions exp)))
+;; 	((cond? exp) (analyze (cond->if exp)))
+;; 	((application? exp) (analyze-application exp))
+;; 	(else (error "Unknown expression type: ANALYZE" exp))))
 
 (define (ambeval exp env succeed fail)
   ((analyze exp) env succeed fail))
@@ -455,4 +450,62 @@
 ;;;;
 ;;;; Answer of ex4-52
 ;;;;
+(define (analyze exp)
+  (cond ((self-evaluating? exp) (analyze-self-evaluating exp))
+	((quoted? exp) (analyze-quoted exp))
+	((variable? exp) (analyze-variable exp))
+	((let? exp) (analyze-let exp))
+        ;; added for amb evaluator
+        ((amb? exp) (analyze-amb exp))
+	((assignment? exp) (analyze-assignment exp))
+	((definition? exp) (analyze-definition exp))
+	((if? exp) (analyze-if exp))
+        ((if-fail? exp) (analyze-if-fail exp))
+	((lambda? exp) (analyze-lambda exp))
+	((begin? exp) (analyze-sequence (begin-actions exp)))
+	((cond? exp) (analyze (cond->if exp)))
+	((application? exp) (analyze-application exp))
+	(else (error "Unknown expression type: ANALYZE" exp))))
 
+
+(define (if-fail? exp) (tagged-list? exp 'if-fail))
+(define (if-fail-succeed exp) (cadr exp))
+(define (if-fail-fail exp) (caddr exp))
+
+(define (analyze-if-fail exp)
+  (let ((psucceed (analyze (if-fail-succeed exp)))
+        (pfail (analyze (if-fail-fail exp))))
+    (lambda (env succeed fail)
+      (psucceed env
+                (lambda (succeed-value fail2)
+                  (succeed succeed-value fail2))
+                (lambda ()
+                  (pfail env succeed fail))))))
+
+
+;;;; TEST
+;; ;;; Amb-eval input:
+;; (define (require p) (if (not p) (amb)))
+;; (define (an-element-of items)
+;;   (require (not (null? items)))
+;;  (amb (car items) (an-element-of (cdr items))))
+
+;; (if-fail (let ((x (an-element-of '(1 3 5))))
+;;   (require (even? x)) x)
+;;   'all-odd)
+
+;; ;;; Starting a new problem
+;; ;;; Amb-eval value:
+;; all-odd
+;; ;;; Amb-eval input:
+;; (if-fail (let ((x (an-element-of '(1 3 5 8))))
+;; (require (even? x))
+;; x)
+;; 'all-odd)
+;; ;;; Starting a new problem
+;; ;;; Amb-eval value:
+;; 8
+;; ;;; Amb-eval input:
+;; try-again
+;; ;;; Amb-eval value:
+;; all-odd
