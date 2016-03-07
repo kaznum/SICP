@@ -52,4 +52,12 @@
 
 ;;;; Simple queries
 
+(job ?x (computer programmer)
+(address ?x ?y)
+(supervisor ?x ?x)
+(job ?x (computer ?type))
+(job ?x (computer . ?type))
+
+;;;; Compound queries
+
 ;; to be continued
