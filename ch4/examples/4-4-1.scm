@@ -59,5 +59,17 @@
 (job ?x (computer . ?type))
 
 ;;;; Compound queries
+(and (job ?person (computer programmer))
+     (address ?person ?where))
+
+(or (supervisor ?x (Bitdiddle Ben))
+    (supervisor ?x (Hacker Alyssa P)))
+
+(and (supervisor ?x (Bitdiddle Ben))
+     (not (job ?x (computer programmer))))
+
+(and (salary ?person ?amount) (lisp-value > ?amount 30000))
+
+;;;; Rules
 
 ;; to be continued
