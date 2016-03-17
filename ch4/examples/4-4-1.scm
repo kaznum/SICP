@@ -95,5 +95,20 @@
 
 
 ;;;; Logic as programs
+(rule (append-to-form () ?y ?y))
+(rule (append-to-form (?u . ?v) ?y (?u . ?z))
+      (append-to-form ?v ?y ?z))
+
+
+;; query
+(append-to-form (a b) (c d) ?z)
+;; result
+(append-to-form (b) (c d) j)  ;; where (a . j) = ?z
+(append-to-form () (c d)  k) ;; where (b . k) = j
+;; => k = (c d)
+;; => j = (b c d)
+;; => ?z = (a b c d)
+
+(append-to-form (a b) (c d) (a b c d))
 
 ;; to be continued
