@@ -102,13 +102,60 @@
 
 ;; query
 (append-to-form (a b) (c d) ?z)
-;; result
-(append-to-form (b) (c d) j)  ;; where (a . j) = ?z
-(append-to-form () (c d)  k) ;; where (b . k) = j
+;; (append-to-form (b) (c d) j)  ;; where (a . j) = ?z
+;; (append-to-form () (c d)  k) ;; where (b . k) = j
 ;; => k = (c d)
 ;; => j = (b c d)
 ;; => ?z = (a b c d)
 
+;; result
 (append-to-form (a b) (c d) (a b c d))
 
-;; to be continued
+;; query
+(append-to-form (a b) ?y (a b c d))
+
+;; => u = a, v = (b), z => (b c d),
+;; (append-to-form (b) ?y (b c d)) ;; => u = b, v = (), z = (c d)
+;; (append-to-form () ?y (c d)) ;; ?y = (c d)
+
+;; result
+(append-to-form (a b) (c d) (a b c d)
+
+;; query
+(append-to-form ?x ?y (a b c d))
+
+;; => 1. ?x = (), ?y = (a b c d)
+;; (append-to-form () (a b c d) (a b c d)) ;; **result**
+
+;; => 2. u = a, v = ?l, z = (b c d), ?x = (a . ?l)
+;; (append-to-form ?l ?y (b c d))
+;;
+;; => 2-1. ?l = (), ?y = (b c d)
+;; (append-to-form (a) (b c d) (a b c d) ;; **result**
+
+;; => 2-2. u = b, v = ?m, z = (c d), ?l = (b . ?m)
+;; (append-to-form ?m ?y (c d))
+;;
+;; => 2-2-1. ?m = (), ?y = (c d)
+;; (append-to-form (a b) (c d) (a b c d)) ;; **result**
+;;
+;; => 2-2-2. u = c, v = ?n, z = (d), ?m = (c . ?n)
+;; (append-to-form ?n ?y (d))
+;;
+;; => 2-2-2-1. ?n = (), ?y = (d)
+;; (append-to-form (a b c) (d) (a b c d)) ;; **result**
+
+;; => 2-2-2-2. u = d, v = ?o, z = (), ?n = (d . ?o)
+;; (append-to-form ?o ?y ())
+
+;; => 2-2-2-2-1. ?y = (), ?o = ()
+;; (append-to-form (a b c d) () (a b c d)) ;; **result**
+
+;; => 2-2-2-2-2. no match
+
+;; result
+(append-to-form () (a b c d) (a b c d))
+(append-to-form (a) (b c d) (a b c d))
+(append-to-form (a b) (c d) (a b c d))
+(append-to-form (a b c) (d) (a b c d))
+(append-to-form (a b c d) () (a b c d))
