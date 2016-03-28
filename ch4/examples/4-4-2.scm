@@ -58,4 +58,16 @@
 
 ;;;; Applying rules
 
+(live-near ?x (Hacker Alyssa P))
+
+;; First, try pattern matching to the original assertions in database,
+;; but there is no match because there is no (live-near...) assertion in database.
+;; Sedond, try to unify the conclusion of each rule.
+
+;; 1. Unify the query with the conclusion of the rule to form an extension of the original frame
+;; 2. Relative to the extended frame, evaluate the query formed by the body of the rule.
+
+;;;; Simple queries
+
+
 ;; to be continued
