@@ -34,4 +34,28 @@
 
 ;;;; Unification
 
+;; We need simultaneous equations
+
+(?x ?x), ((a ?y c) (a b ?z)
+
+?x = (a ?y c)
+?x = (a b ?z)
+
+(a ?y c) = (a b ?z)
+
+?y = b
+?z = c
+
+?x = (a b c)
+
+;; In general, a successful unification may not determin all of the variable value.
+
+(?x a), ((b ?y) ?z)
+
+?x = (b ?y)
+?z = a
+;; The unification above does not fail, ?x and ?y can be assigned.
+
+;;;; Applying rules
+
 ;; to be continued
