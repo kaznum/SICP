@@ -67,7 +67,28 @@
 ;; 1. Unify the query with the conclusion of the rule to form an extension of the original frame
 ;; 2. Relative to the extended frame, evaluate the query formed by the body of the rule.
 
+
 ;;;; Simple queries
 
+;; Given input stream and query pattern, we generates for each frame in the input stream 2 streams:
+;; 1. a stream of extended frames by pattern matching with database.
+;; 2. a stream of extended frames by unification with rules.
+;; The two output stream are combined to one stream.
 
-;; to be continued
+
+;;;; The query evaluator and the driver loop
+
+;; qeval: The procedure to cordinate the matching operations.
+;;        This generates the extended frames.
+;;        It classifies the different types of queries and dispatch the appropriate procedure for each.
+;; Driver loop: Read queries from terminal.
+;;              Input query and the empty stream of frame.
+;;              Call qeval which extends the single empty frame. It instantiate the 'query' using the values of the variables in the generated frames.(Generate the instantiated query stream)
+;;              Print the instantiated query stream.
+
+;; Driver checks 'assert!' command to register the assertions and rules to the database.
+
+(assert! (job (Bitdiddle Ben) (computer wizard)))
+(assert! (rule (wheel ?person)
+               (and (supervisor ?middle-manager ?person)
+                    (supervisor ?x ?middle-manager))))
