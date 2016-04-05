@@ -15,6 +15,15 @@
 
 ;;;; Inifinite loops
 
+(assert! (married Minnie Mickey))
+
+(married Mickey ?who) ;; no match
+
+(assert! (rule (married ?x ?y) (married ?y ?x)))
+
+(married Mickey ?who) ;; Infinite loop
+
+;;;; Problems with not
 
 ;; to be continued
 
