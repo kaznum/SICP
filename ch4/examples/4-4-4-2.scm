@@ -20,4 +20,24 @@
 
 ;;;; Compound queries
 
+(define (conjoin conjuncts frame-stream)
+  (if (empty-conjunction? conjuncts)
+      frame-stream
+      (conjoin (rest-conjunctions conjuncts)
+               (qeval (first-conjunction conjuncts) frame-stream))))
+
+(put 'and 'qeval conjoin)
+
+(define (disjoin disjuncts frame-stream)
+  (if (empty-disjunction? disjuncts)
+      the-empty-stream
+      (interleave-delayed
+       (qeval (first-disjunction disjuncts) frame-stream)
+       (delay disjoin (rest-disjuncts) frame-stream))))
+
+(put 'or 'qeval disjoin)
+
+;;;; Filters
+
+
 ;; to be continued
