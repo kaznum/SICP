@@ -26,6 +26,9 @@
       (conjoin (rest-conjunctions conjuncts)
                (qeval (first-conjunction conjuncts) frame-stream))))
 
+;; put is not defined so far in the book
+;; see http://stackoverflow.com/questions/5499005/how-do-i-get-the-functions-put-and-get-in-sicp-scheme-exercise-2-78-and-on
+
 (put 'and 'qeval conjoin)
 
 (define (disjoin disjuncts frame-stream)
@@ -36,6 +39,7 @@
        (delay disjoin (rest-disjuncts) frame-stream))))
 
 (put 'or 'qeval disjoin)
+
 
 ;;;; Filters
 
