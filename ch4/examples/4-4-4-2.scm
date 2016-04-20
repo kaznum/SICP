@@ -42,6 +42,37 @@
 
 
 ;;;; Filters
+(define (negate operands frame-stream)
+  (stream-flatmap
+   (lambda (frame)
+     (if (stream-null? (qeval (negated-query operands) (singleton-stream frame)))
+         (singleton-stream frame)
+         the-empty-stream))
+   frame-stream))
+
+(put 'not 'qeval negate)
+
+(define (lisp-value call frame-stream)
+  (stream-flatmap
+   (lambda (frame)
+     (if (execute
+          (instantiate
+           call
+           frame
+           (lambda (v f)
+             (error "Unknown pat var: LISP-VALUE" v)))) ;; if there is unbound variable in 'call' with the frame, an error occurs
+         (singleton-stream frame)
+         the-empty-stream))
+   frame-stream))
+
+(put 'lisp-value 'qeval lisp-value)
 
 
-;; to be continued
+;; 'execute' uses underlying Lisp system.
+;; It must evaluate the predicate, but must not evaluate the arguments because they are already actual values
+(define (execute exp)
+  (apply (eval (predicate exp) user-initial-environment)
+         (args exp)))
+
+(define (always-true ignore frame-stream) frame-stream)
+(put 'always-true 'qeval always-true)
