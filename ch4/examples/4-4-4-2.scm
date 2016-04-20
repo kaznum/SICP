@@ -69,7 +69,11 @@
 
 
 ;; 'execute' uses underlying Lisp system.
-;; It must evaluate the predicate, but must not evaluate the arguments because they are already actual values
+;; It must evaluate the predicate, but must not evaluate the arguments because they are already actual values.
+;;
+;; 'user-initial-environment' is the environment whose parent is system-global-environment.
+;; Any bindings created in read-eval-loop occurs in user-initial-environment.
+;; See http://sicp.ai.mit.edu/Fall-2004/manuals/scheme-7.5.5/doc/scheme_14.html
 (define (execute exp)
   (apply (eval (predicate exp) user-initial-environment)
          (args exp)))
