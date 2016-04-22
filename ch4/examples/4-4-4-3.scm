@@ -43,4 +43,9 @@
 
 ;;;; Patterns with dotted tails
 
-;; to be continued
+;; When `read` in underlying list system encounters dot(.),
+;; it makes the next item as cdr of the list structure.
+;; For example,
+;; the pattern for `(computer ?type)` is structured as `(cons 'computer (cons '?type '()))`
+;; on the other hand,
+;; (computer . ?type) is structured as `(cons 'computer '?type)`
