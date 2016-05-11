@@ -38,7 +38,7 @@
       the-empty-stream
       (interleave-delayed
        (qeval (first-disjunction disjuncts) frame-stream)
-       (delay disjoin (rest-disjuncts) frame-stream))))
+       (delay (disjoin (rest-disjuncts) frame-stream)))))
 
 (put 'or 'qeval disjoin)
 

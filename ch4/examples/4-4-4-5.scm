@@ -27,7 +27,7 @@
    (get-stream '? 'rule-stream)))
 
 
-(define (add-rule-or-asseertion! assertion)
+(define (add-rule-or-assertion! assertion)
   (if (rule? assertion)
       (add-rule! assertion)
       (add-assertion! assertion)))

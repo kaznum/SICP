@@ -54,7 +54,7 @@
   (map-over-symbol expand-question-mark exp))
 
 (define (map-over-symbol proc exp)
-  (cons ((pair? exp)
+  (cond ((pair? exp)
          (cons (map-over-symbol proc (car exp))
                (map-over-symbol proc (cdr exp))))
         ((symbol? exp)

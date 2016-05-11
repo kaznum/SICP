@@ -1,10 +1,10 @@
-(define (stream-append-delay s1 delayed-s2)
+(define (stream-append-delayed s1 delayed-s2)
   (if (stream-null? s1)
       (force delayed-s2)
       (cons-stream
        (stream-car s1)
-       (stream-append-delay
-        (stream-cdr s2)
+       (stream-append-delayed
+        (stream-cdr s1)
         delayed-s2))))
 
 ;; interleave:
@@ -31,4 +31,4 @@
        (delay (flatten-stream (stream-cdr s))))))
 
 (define (singleton-stream x)
-  (stream-cons x the-empty-stream))
+  (cons-stream x the-empty-stream))
