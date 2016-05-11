@@ -1,6 +1,17 @@
 (define input-prompt ";;; Query input:")
 (define output-prompt ";;; Query result:")
 
+;; from ch4.1.4
+(define (prompt-for-input string)
+  (newline) (newline) (display string) (newline))
+;; end of 'from ch4.1.4'
+
+;; from ch3.5..1
+(define (display-stream s)
+  (stream-for-each display-line s))
+(define (display-line x) (newline) (display x))
+;; end of 'from ch3.5.1'
+
 (define (query-driver-loop)
   (prompt-for-input input-prompt)
   (let ((q (query-syntax-process (read)))) ;; transform syntactically for efficiency, change the representation of the pattern variables

@@ -28,6 +28,8 @@
 
 ;; put is not defined so far in the book
 ;; see http://stackoverflow.com/questions/5499005/how-do-i-get-the-functions-put-and-get-in-sicp-scheme-exercise-2-78-and-on
+(define get 2d-get)
+(define put 2d-put!)
 
 (put 'and 'qeval conjoin)
 

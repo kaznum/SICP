@@ -32,6 +32,13 @@
 
 ;; the syntax of rules
 
+;; from ch4.1.2
+(define (tagged-list? exp tag)
+  (if (pair? exp)
+      (eq? (car exp) tag)
+      false))
+;; end of 'from ch4.1.2'
+
 (define (rule? statement)
   (tagged-list? statement 'rule))
 
