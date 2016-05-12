@@ -23,8 +23,8 @@
 (define (conjoin conjuncts frame-stream)
   (if (empty-conjunction? conjuncts)
       frame-stream
-      (conjoin (rest-conjunctions conjuncts)
-               (qeval (first-conjunction conjuncts) frame-stream))))
+      (conjoin (rest-conjuncts conjuncts)
+               (qeval (first-conjunct conjuncts) frame-stream))))
 
 ;; put is not defined so far in the book
 ;; see http://stackoverflow.com/questions/5499005/how-do-i-get-the-functions-put-and-get-in-sicp-scheme-exercise-2-78-and-on
@@ -37,8 +37,8 @@
   (if (empty-disjunction? disjuncts)
       the-empty-stream
       (interleave-delayed
-       (qeval (first-disjunction disjuncts) frame-stream)
-       (delay (disjoin (rest-disjuncts) frame-stream)))))
+       (qeval (first-disjunct disjuncts) frame-stream)
+       (delay (disjoin (rest-disjuncts disjuncts) frame-stream)))))
 
 (put 'or 'qeval disjoin)
 
