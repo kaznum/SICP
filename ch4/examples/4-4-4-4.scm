@@ -12,7 +12,7 @@
                                      query-frame)))
       (if (eq? unify-result 'failed)
           the-empty-stream
-          (eqval (rule-body clean-rule)
+          (qeval (rule-body clean-rule)
                  (singleton-stream unify-result))))))
 
 (define (rename-variables-in rule)
