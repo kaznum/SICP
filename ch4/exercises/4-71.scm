@@ -53,73 +53,42 @@
 
 
 (define sample "
-
-(assert! (say bye 1))
-(assert! (say bye 2))
-(assert! (say hello 1))
-(assert! (say hello 2))
-(assert! (rule (disp ?x ?y) (say ?y ?x)))
-(assert! (rule (same ?x ?x)))
-(and (say bye ?x)
-     (not (same ?x 2)))
-(and (say bye ?x) (say hello ?y) (same ?x ?y) (lisp-value > ?x 1))
-(and (say bye ?x) (say hello ?y) (same ?x ?y) (not (lisp-value > ?x 1)))
-(and (say bye ?x) (say hello ?y) (or (lisp-value > ?x 1) (same ?x ?y)))
-(or (say bye ?x) (say hello ?x))
-
+ (assert! (rule (x) (or (always-true) (y))))
+ (assert! (rule (y) (or (always-true) (x))))
 ")
 
 (query-driver-loop)
 
 ;; ;; Answer
 ;; The Louis example evaluates the find-assertion and apply-rules simultaneously, but Text example evaluates apply-rules lazyly, so
-;; the Louis one does not support the infinite frame stream.
+;; the Louis one does not display any result.
 
-;; Text example
-
-;;; Query input:
-;; (assert! (a 2))
-;; Assertion added to data base.
-;;; Query input:
-;; (assert! (rule (x) (a ?m)))
-;; Assertion added to data base.
-;;; Query input:
-;; (x)
-;;; Query result:
-;; (x)
-;;; Query input:
-;; (assert! (rule (a ?x) (a ?x)))
-;; Assertion added to data base.
-;;; Query input:
-;; (x)
-;;; Query result:
-;; (x)
-;; (x)
-;; (x)
-;; (x)
-;; (x)
-;; ...
-;; ...
-;; ...
-
-;; Exercise 4.71's example
-
+;; ;; Text example
 ;; ;;; Query input:
-;; (assert! (a 2))
+;;  (assert! (rule (x) (or (always-true) (y))))
 ;; Assertion added to data base.
 ;; ;;; Query input:
-;; (assert! (rule (x) (a ?m)))
+;;  (assert! (rule (y) (or (always-true) (x))))
 ;; Assertion added to data base.
 ;; ;;; Query input:
 ;; (x)
 ;; ;;; Query result:
 ;; (x)
+;; (x)
+;; (x)
+;; (x)
+;; ...
+;; ...
+
+;; ;; Exercise 4.71's example
 ;; ;;; Query input:
-;; (assert! (rule (a ?x) (a ?x)))
+;;  (assert! (rule (x) (or (always-true) (y))))
+;; Assertion added to data base.
+;; ;;; Query input:
+;;  (assert! (rule (y) (or (always-true) (x))))
 ;; Assertion added to data base.
 ;; ;;; Query input:
 ;; (x)
 ;; ;;; Query result:
 ;; ;... aborted
 ;; ;Aborting!: maximum recursion depth exceeded
-
