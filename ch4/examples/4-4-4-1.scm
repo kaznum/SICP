@@ -30,7 +30,7 @@
                 q
                 frame
                 (lambda (v f)
-                  (contract-question-mark v)))) ;; unbound variables are transformed back to the input representation
+                  (contract-question-mark v)))) ;; unbound variables are transformed back to the input representation, which is the 'unbound-var-handler' argument of 'instantiate'.
              (qeval q (singleton-stream '()))))
            (query-driver-loop)))))
 
@@ -41,9 +41,9 @@
     (cond ((var? exp)
            (let ((binding (binding-in-frame exp frame)))
              (if binding
-                 (copy (binding-value binding))
+                 (copy (binding-value binding)) ;; for ?x which is bound to ?y
                  (unbound-var-handler exp frame))))
           ((pair? exp)
            (cons (copy (car exp)) (copy (cdr exp))))
-          (else exp)))
+          (else exp))) ;; this is for the real value which is not variable
   (copy exp))
