@@ -1,4 +1,4 @@
-;; returns the stream of extended frames
+;; returns a stream of extended frames
 (define (qeval query frame-stream)
   (let ((qproc (get (type query) 'qeval)))
     (if qproc
@@ -62,7 +62,7 @@
            call
            frame
            (lambda (v f)
-             (error "Unknown pat var: LISP-VALUE" v)))) ;; if there is unbound variable in 'call' with the frame, an error occurs
+             (error "Unknown pat var: LISP-VALUE" v)))) ;; if there is unbound variable in 'call' with the frame, it makes an error occur.
          (singleton-stream frame)
          the-empty-stream))
    frame-stream))
@@ -71,11 +71,15 @@
 
 
 ;; 'execute' uses underlying Lisp system.
-;; It must evaluate the predicate, but must not evaluate the arguments because they are already actual values.
+;; It must evaluate the predicate, but must not evaluate the arguments because they are already actual values (which have been converted in instantiate).
 ;;
 ;; 'user-initial-environment' is the environment whose parent is system-global-environment.
 ;; Any bindings created in read-eval-loop occurs in user-initial-environment.
 ;; See http://sicp.ai.mit.edu/Fall-2004/manuals/scheme-7.5.5/doc/scheme_14.html
+;;
+;; How to use 'apply'
+;;   (apply (eval '< user-initial-environment) '(3 2))) => #f
+
 (define (execute exp)
   (apply (eval (predicate exp) user-initial-environment)
          (args exp)))
