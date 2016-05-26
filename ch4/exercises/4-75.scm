@@ -10,46 +10,53 @@
 
 ;;;; Answer
 
+(define (empty-frame? frame) (null? frame))
+(define (first-binding frame) (car frame))
+(define (rest-bindings frame) (cdr frame))
+(define empty-frame '())
+
 (define (unique-asserted operands frame-stream)
-  (define unique-frames the-empty-stream)
-  (define (delete-binding variable frame)
-    (cond ((null? frame)
-           '())
-          ((equal? variable (binding-variable (car frame)))
-           (cdr frame))
-          (else
-           (cond (car frame) (delete-binding variable (cdr frame))))))
+  ;; (define (delete-binding variable frame)
+  ;;   (cond ((empty-frame? frame)
+  ;;          empty-frame)
+  ;;         ((equal? variable (binding-variable (first-binding frame)))
+  ;;          (rest-bindings frame))
+  ;;         (else
+  ;;          (cond (first-binding frame) (delete-binding variable (rest-bindings frame))))))
 
-  (define (equal-frame? f1 f2)
-    (cond ((and (null? f1) (null? f2)) true)
-          ((not (= (length f1) (length f2))) false)
-          (else
-           (let ((binding (car f1)))
-             (let ((var (binding-variable binding))
-                   (val (binding-value binding)))
-               (let ((binding-in-f2 (binding-in-frame var f2)))
-                 (cond ((not binding-in-f2) false)
-                       ((not (equal? val (binding-value binding-in-f2))) false)
-                       (equal-frame? (cdr f1)
-                                     (delete-binding var f2)))))))))
+  (define (duplicated-binding? f1 f2)
+    (if (empty-frame? f1)
+        false
+        (let ((binding (first-binding f1)))
+          (let ((var (binding-variable binding))
+                (val (binding-value binding)))
+            (let ((binding-in-f2 (binding-in-frame var f2)))
+              (cond ((not binding-in-f2)
+                     (duplicated-binding? (rest-bindings f1) f2))
+                    ((equal? val (binding-value binding-in-f2))
+                     true
+                    (else
+                     (duplicated-binding? (rest-bindings f1) f2)))))))))
 
-  (define (accumulate-unique-frames frame frames)
+  (define (accumulate-unique-frames new-frame frames)
     (cond ((stream-null? frames)
-           (cons-stream frame frames))
-          ((equal-frame? (stream-car frames) frame)
+           (cons-stream new-frame frames))
+          ((duplicated-binding? (stream-car frames) new-frame)
            (stream-cdr frames))
           (else
            (cons-stream (stream-car frames)
-                        (accumulate-unique-frames frame (stream-cdr frames))))))
+                        (accumulate-unique-frames new-frame (stream-cdr frames))))))
+
+  (define unique-frames the-empty-stream)
+
+  (display (qeval (car operands) frame-stream))
+
   (stream-flatmap
    (lambda (frame)
-     (display frame)
-     (newline)
-     (set! unique-frames (accumulate-unique-frames frame unique-frames)))
-
+     (let ((tmp-frames unique-frames))
+       (set! unique-frames (accumulate-unique-frames frame tmp-frames))))
    (qeval (car operands) frame-stream))
   unique-frames)
-
 
 (put 'unique 'qeval unique-asserted)
 
@@ -99,6 +106,7 @@
 
 (unique (job ?x (computer wizard)))
 (unique (job ?x (computer programmer)))
+(and (job ?x ?j) (unique (job ?anyone ?j)))
 
 ")
 
