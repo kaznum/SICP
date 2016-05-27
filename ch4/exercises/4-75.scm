@@ -39,6 +39,7 @@
            (cons-stream (stream-car frames)
                         (accumulate-unique-frames new-frame (stream-cdr frames))))))
 
+
   (define unique-frames the-empty-stream)
 
   (stream-flatmap
@@ -102,4 +103,6 @@
 
 ;; to be continued
 ;; It is not enough to comparing frames because (computer programmer) in (unique (job ?x (computer programmer))) is not variable.
+;; Rewrite the code the way...
+;;  if (qeval content singleton-frame-stream) generates only one result, then it should be unique.
 
