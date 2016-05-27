@@ -16,14 +16,6 @@
 (define empty-frame '())
 
 (define (unique-asserted operands frame-stream)
-  ;; (define (delete-binding variable frame)
-  ;;   (cond ((empty-frame? frame)
-  ;;          empty-frame)
-  ;;         ((equal? variable (binding-variable (first-binding frame)))
-  ;;          (rest-bindings frame))
-  ;;         (else
-  ;;          (cond (first-binding frame) (delete-binding variable (rest-bindings frame))))))
-
   (define (duplicated-binding? f1 f2)
     (if (empty-frame? f1)
         false
@@ -34,22 +26,20 @@
               (cond ((not binding-in-f2)
                      (duplicated-binding? (rest-bindings f1) f2))
                     ((equal? val (binding-value binding-in-f2))
-                     true
+                     true)
                     (else
-                     (duplicated-binding? (rest-bindings f1) f2)))))))))
+                     (duplicated-binding? (rest-bindings f1) f2))))))))
 
   (define (accumulate-unique-frames new-frame frames)
     (cond ((stream-null? frames)
            (cons-stream new-frame frames))
           ((duplicated-binding? (stream-car frames) new-frame)
-           (stream-cdr frames))
+           (accumulate-unique-frames new-frame (stream-cdr frames)))
           (else
            (cons-stream (stream-car frames)
                         (accumulate-unique-frames new-frame (stream-cdr frames))))))
 
   (define unique-frames the-empty-stream)
-
-  (display (qeval (car operands) frame-stream))
 
   (stream-flatmap
    (lambda (frame)
@@ -111,3 +101,5 @@
 ")
 
 ;; to be continued
+;; It is not enough to comparing frames because (computer programmer) in (unique (job ?x (computer programmer))) is not variable.
+
