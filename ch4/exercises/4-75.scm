@@ -9,45 +9,14 @@
 
 
 ;;;; Answer
-
-(define (empty-frame? frame) (null? frame))
-(define (first-binding frame) (car frame))
-(define (rest-bindings frame) (cdr frame))
-(define empty-frame '())
-
 (define (unique-asserted operands frame-stream)
-  (define (duplicated-binding? f1 f2)
-    (if (empty-frame? f1)
-        false
-        (let ((binding (first-binding f1)))
-          (let ((var (binding-variable binding))
-                (val (binding-value binding)))
-            (let ((binding-in-f2 (binding-in-frame var f2)))
-              (cond ((not binding-in-f2)
-                     (duplicated-binding? (rest-bindings f1) f2))
-                    ((equal? val (binding-value binding-in-f2))
-                     true)
-                    (else
-                     (duplicated-binding? (rest-bindings f1) f2))))))))
-
-  (define (accumulate-unique-frames new-frame frames)
-    (cond ((stream-null? frames)
-           (cons-stream new-frame frames))
-          ((duplicated-binding? (stream-car frames) new-frame)
-           (accumulate-unique-frames new-frame (stream-cdr frames)))
-          (else
-           (cons-stream (stream-car frames)
-                        (accumulate-unique-frames new-frame (stream-cdr frames))))))
-
-
-  (define unique-frames the-empty-stream)
-
   (stream-flatmap
    (lambda (frame)
-     (let ((tmp-frames unique-frames))
-       (set! unique-frames (accumulate-unique-frames frame tmp-frames))))
-   (qeval (car operands) frame-stream))
-  unique-frames)
+     (let ((extended-frame-stream (qeval (car operands) (singleton-stream frame))))
+       (if (= (stream-length extended-frame-stream) 1)
+           extended-frame-stream
+           the-empty-stream)))
+   frame-stream))
 
 (put 'unique 'qeval unique-asserted)
 
@@ -101,8 +70,24 @@
 
 ")
 
-;; to be continued
-;; It is not enough to comparing frames because (computer programmer) in (unique (job ?x (computer programmer))) is not variable.
-;; Rewrite the code the way...
-;;  if (qeval content singleton-frame-stream) generates only one result, then it should be unique.
+
+;;;; test results
+;; ;;; Query input:
+;; (unique (job ?x (computer wizard)))
+;; ;;; Query result:
+;; (unique (job (bitdiddle ben) (computer wizard)))
+;; ;;; Query input:
+;; (unique (job ?x (computer programmer)))
+;; ;;; Query result:
+
+;; ;;; Query input:
+;; (and (job ?x ?j) (unique (job ?anyone ?j)))
+;; ;;; Query result:
+;; (and (job (aull dewitt) (administration secretary)) (unique (job (aull dewitt) (administration secretary))))
+;; (and (job (cratchet robert) (accounting scrivener)) (unique (job (cratchet robert) (accounting scrivener))))
+;; (and (job (scrooge eben) (accounting chief accountant)) (unique (job (scrooge eben) (accounting chief accountant))))
+;; (and (job (warbucks oliver) (administration big wheel)) (unique (job (warbucks oliver) (administration big wheel))))
+;; (and (job (reasoner louis) (computer programmer trainee)) (unique (job (reasoner louis) (computer programmer trainee))))
+;; (and (job (tweakit lem e) (computer technician)) (unique (job (tweakit lem e) (computer technician))))
+;; (and (job (bitdiddle ben) (computer wizard)) (unique (job (bitdiddle ben) (computer wizard))))
 
