@@ -68,6 +68,15 @@
 (unique (job ?x (computer programmer)))
 (and (job ?x ?j) (unique (job ?anyone ?j)))
 
+(and (supervisor ?supervised ?supervisor) (unique (supervisor ?anyone ?supervisor)))
+
+(assert! (rule (outranked-by ?staff-person ?boss)
+               (or (supervisor ?staff-person ?boss)
+                   (and (supervisor ?staff-person ?middle-manager)
+                        (outranked-by ?middle-manager ?boss)))))
+
+(and (supervisor ?supervised ?supervisor) (unique (outranked-by ?anyone ?supervisor)))
+
 ")
 
 
@@ -90,4 +99,20 @@
 ;; (and (job (reasoner louis) (computer programmer trainee)) (unique (job (reasoner louis) (computer programmer trainee))))
 ;; (and (job (tweakit lem e) (computer technician)) (unique (job (tweakit lem e) (computer technician))))
 ;; (and (job (bitdiddle ben) (computer wizard)) (unique (job (bitdiddle ben) (computer wizard))))
+;; ;;; Query input:
+;; (and (supervisor ?supervised ?supervisor) (unique (supervisor ?anyone ?supervisor)))
+;; ;;; Query result:
+;; (and (supervisor (cratchet robert) (scrooge eben)) (unique (supervisor (cratchet robert) (scrooge eben))))
+;; (and (supervisor (reasoner louis) (hacker alyssa p)) (unique (supervisor (reasoner louis) (hacker alyssa p))))
 
+;; ;;; Query input:
+;; (assert! (rule (outranked-by ?staff-person ?boss)
+;;                (or (supervisor ?staff-person ?boss)
+;;                    (and (supervisor ?staff-person ?middle-manager)
+;;                         (outranked-by ?middle-manager ?boss)))))
+;; Assertion added to data base.
+;; ;;; Query input:
+;; (and (supervisor ?supervised ?supervisor) (unique (outranked-by ?anyone ?supervisor)))
+;; ;;; Query result:
+;; (and (supervisor (cratchet robert) (scrooge eben)) (unique (outranked-by (cratchet robert) (scrooge eben))))
+;; (and (supervisor (reasoner louis) (hacker alyssa p)) (unique (outranked-by (reasoner louis) (hacker alyssa p))))
