@@ -23,7 +23,7 @@
             (cons (car f) (except var (cdr f))))
         f))
 
-  (define (merge-stream-frames f1 f2)
+  (define (merge-frames f1 f2)
     (if (null? f1)
         f2
         (let ((first-binding (car f1)))
@@ -32,24 +32,33 @@
             (let ((f2-binding (binding-in-frame var f2)))
               (if f2-binding
                   (if (equal? val (binding-value f2-binding))
-                      (cons first-binding (merge-stream-frames (cdr f1) (except var f2)))
+                      (cons first-binding (merge-frames (cdr f1) (except var f2)))
                       'fail)
-                  (cons first-binding (merge-stream-frames (cdr f1) f2))))))))
+                  (cons first-binding (merge-frames (cdr f1) f2))))))))
 
-;;; to be continued
-  (if (empty-conjunction? conjuncts)
-      frame-stream
-      (stream-map
-       (lambda (frame)
-         (merge-frames 
-                       (qeval (first-conjunct conjuncts)  (singleton-stream frame))
-                       
-                       
-          (map
-           (lambda (conjunct)
-             (qeval conjunct (singleton-stream frame)))
-           conjuncts)))
-        frame-stream)))
+  (define (merge-stream-frames stream1 stream2)
+    (define (remove-fail stream)
+      (cond ((stream-null? stream) the-empty-stream)
+            ((eq? (stream-car stream) 'fail) (remove-fail (stream-cdr stream)))
+            (else (cons-stream (stream-car stream) (remove-fail (stream-cdr stream))))))
+
+    (remove-fail (stream-flatmap
+                  (lambda (frame1)
+                    (stream-map
+                     (lambda (frame2)
+                       (merge-frames frame1 frame2))
+                     stream2))
+                  stream1)))
+
+  (define (conjoin-with-single-frame conjuncts frame)
+    (if (empty-conjunction? conjuncts)
+        (singleton-stream frame)
+        (merge-stream-frames (qeval (first-conjunct conjuncts) (singleton-stream frame))
+                             (conjoin-with-single-frame (rest-conjuncts conjuncts) frame))))
+
+  (stream-flatmap
+   (lambda (frame) (conjoin-with-single-frame conjuncts frame))
+   frame-stream))
 
 (put 'and 'qeval efficient-conjoin)
 
@@ -97,6 +106,12 @@
                      (computer programmer trainee)))
 (assert! (can-do-job (administration secretary)
                      (administration big wheel)))
+
+
+(and (job ?x (computer programmer)) (supervisor ?y ?x))
+
+;; the following does not work because ?y of '(lisp-value < ?y 35000)' is not defined
+(and (job ?x (computer programmer)) (salary ?x ?y) (lisp-value < ?y 35000))
 
 ")
 
