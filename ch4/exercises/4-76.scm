@@ -16,14 +16,12 @@
 ;; (put 'and 'qeval conjoin)
 
 (define (efficient-conjoin conjuncts frame-stream)
-  (define (except var f)
-    (if (binding-in-frame var f)
-        (if (equal? var (binding-variable (car f)))
-            (cdr f)
-            (cons (car f) (except var (cdr f))))
-        f))
+  (define (filterout-binding var f)
+    (filter (lambda (binding)
+              (not (equal? var (binding-variable binding))))
+            f))
 
-  (define (merge-frames f1 f2)
+  (define (merge-frame f1 f2)
     (if (null? f1)
         f2
         (let ((first-binding (car f1)))
@@ -32,21 +30,19 @@
             (let ((f2-binding (binding-in-frame var f2)))
               (if f2-binding
                   (if (equal? val (binding-value f2-binding))
-                      (cons first-binding (merge-frames (cdr f1) (except var f2)))
-                      'fail)
-                  (cons first-binding (merge-frames (cdr f1) f2))))))))
+                      (cons first-binding (merge-frame (cdr f1) (filterout-binding var f2)))
+                      (cons 'fail '()))
+                  (cons first-binding (merge-frame (cdr f1) f2))))))))
 
   (define (merge-stream-frames stream1 stream2)
-    (define (remove-fail stream)
-      (cond ((stream-null? stream) the-empty-stream)
-            ((eq? (stream-car stream) 'fail) (remove-fail (stream-cdr stream)))
-            (else (cons-stream (stream-car stream) (remove-fail (stream-cdr stream))))))
+    (define (filterout-fail frame-stream)
+      (stream-filter (lambda (x) (not (member 'fail x))) frame-stream))
 
-    (remove-fail (stream-flatmap
+    (filterout-fail (stream-flatmap
                   (lambda (frame1)
                     (stream-map
                      (lambda (frame2)
-                       (merge-frames frame1 frame2))
+                       (merge-frame frame1 frame2))
                      stream2))
                   stream1)))
 
@@ -109,6 +105,7 @@
 
 
 (and (job ?x (computer programmer)) (supervisor ?y ?x))
+;; (and (job (hacker alyssa p) (computer programmer)) (supervisor (reasoner louis) (hacker alyssa p)))
 
 ;; the following does not work because ?y of '(lisp-value < ?y 35000)' is not defined
 (and (job ?x (computer programmer)) (salary ?x ?y) (lisp-value < ?y 35000))
