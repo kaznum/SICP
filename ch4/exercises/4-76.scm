@@ -29,14 +29,15 @@
                 (val (binding-value first-binding)))
             (let ((f2-binding (binding-in-frame var f2)))
               (if f2-binding
+                  ;; TODO The following does not support the binding-value contains variables
                   (if (equal? val (binding-value f2-binding))
                       (cons first-binding (merge-frame (cdr f1) (filterout-binding var f2)))
-                      (cons 'fail '()))
+                      (cons 'failed '()))
                   (cons first-binding (merge-frame (cdr f1) f2))))))))
 
   (define (merge-stream-frames stream1 stream2)
     (define (filterout-fail frame-stream)
-      (stream-filter (lambda (x) (not (member 'fail x))) frame-stream))
+      (stream-filter (lambda (x) (not (member 'failed x))) frame-stream))
 
     (filterout-fail (stream-flatmap
                   (lambda (frame1)
