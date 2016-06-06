@@ -108,6 +108,12 @@
 (and (job ?x (computer programmer)) (supervisor ?y ?x))
 ;; (and (job (hacker alyssa p) (computer programmer)) (supervisor (reasoner louis) (hacker alyssa p)))
 
+;;; TODO
+(and (job ?x (computer programmer)) (supervisor ?y ?x) (supervisor ?z ?y))
+;;; Query result:
+;The object failed, passed as an argument to assoc, is not an association list.
+
+
 ;; the following does not work because ?y of '(lisp-value < ?y 35000)' is not defined
 (and (job ?x (computer programmer)) (salary ?x ?y) (lisp-value < ?y 35000))
 
