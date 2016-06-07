@@ -16,28 +16,23 @@
 ;; (put 'and 'qeval conjoin)
 
 (define (efficient-conjoin conjuncts frame-stream)
-  (define (filterout-binding var f)
-    (filter (lambda (binding)
-              (not (equal? var (binding-variable binding))))
-            f))
-
   (define (merge-frame f1 f2)
-    (if (null? f1)
-        f2
-        (let ((first-binding (car f1)))
-          (let ((var (binding-variable first-binding))
-                (val (binding-value first-binding)))
-            (let ((f2-binding (binding-in-frame var f2)))
-              (if f2-binding
-                  ;; TODO The following does not support the binding-value contains variables
-                  (if (equal? val (binding-value f2-binding))
-                      (cons first-binding (merge-frame (cdr f1) (filterout-binding var f2)))
-                      (cons 'failed '()))
-                  (cons first-binding (merge-frame (cdr f1) f2))))))))
+    (cond ((eq? f2 'failed) 'failed)
+          ((null? f1) f2)
+          (else
+           (let ((first-binding (car f1)))
+             (let ((var (binding-variable first-binding))
+                   ;; TODO val should be evaluated recursively (in original f1)
+                   (val (binding-value first-binding)))
+               ;; (cond ((var? val) ...)
+               ;;       ((pair? val) (cons (... (car val)) (... (cdr val))))
+               ;;       (else val))
+
+               (extend-if-possible var val (merge-frame (cdr f1) f2)))))))
 
   (define (merge-stream-frames stream1 stream2)
     (define (filterout-fail frame-stream)
-      (stream-filter (lambda (x) (not (member 'failed x))) frame-stream))
+      (stream-filter (lambda (x) (not (eq? 'failed x))) frame-stream))
 
     (filterout-fail (stream-flatmap
                   (lambda (frame1)
@@ -104,14 +99,19 @@
 (assert! (can-do-job (administration secretary)
                      (administration big wheel)))
 
+(assert! (rule (outranked-by ?staff-person ?boss)
+               (or (supervisor ?staff-person ?boss)
+                   (and (supervisor ?staff-person ?middle-manager)
+                        (outranked-by ?middle-manager ?boss)))))
 
 (and (job ?x (computer programmer)) (supervisor ?y ?x))
 ;; (and (job (hacker alyssa p) (computer programmer)) (supervisor (reasoner louis) (hacker alyssa p)))
 
-;;; TODO
-(and (job ?x (computer programmer)) (supervisor ?y ?x) (supervisor ?z ?y))
-;;; Query result:
-;The object failed, passed as an argument to assoc, is not an association list.
+(and (job ?x (computer programmer)) (supervisor ?y ?x) (supervisor ?x ?z))
+;; (and (job (hacker alyssa p) (computer programmer)) (supervisor (reasoner louis) (hacker alyssa p)) (supervisor (hacker alyssa p) (bitdiddle ben)))
+
+(and (job ?x (computer programmer)) (supervisor ?y ?x) (outranked-by ?x ?z))
+;; results in infinite loop
 
 
 ;; the following does not work because ?y of '(lisp-value < ?y 35000)' is not defined
