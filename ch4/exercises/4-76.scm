@@ -22,12 +22,7 @@
           (else
            (let ((first-binding (car f1)))
              (let ((var (binding-variable first-binding))
-                   ;; TODO val should be evaluated recursively (in original f1)
                    (val (binding-value first-binding)))
-               ;; (cond ((var? val) ...)
-               ;;       ((pair? val) (cons (... (car val)) (... (cdr val))))
-               ;;       (else val))
-
                (extend-if-possible var val (merge-frame (cdr f1) f2)))))))
 
   (define (merge-stream-frames stream1 stream2)
