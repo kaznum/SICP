@@ -11,12 +11,78 @@
 
 ;; For (and (job ?x (computer programmer)) (lisp-value > ?y 35000) (salary ?x ?y))
 
-;; generates filter at first: (((? x) (AAA BBB)) (delay (lisp-value > ?y 35000)))
+;; generates filter at first: (((? x) (AAA BBB)) (lazy lisp-value > ?y 35000))
 ;; and when filter is applied to it and find 'delay symbol, then
 ;; evaluate (salary ?x ?y) and (lisp-value ...).
 ;; When resolved changes the binding, or keeps it.
 
+;;;; original lisp-value
+;; (define (lisp-value call frame-stream)
+;;   (stream-flatmap
+;;    (lambda (frame)
+;;      (if (execute
+;;           (instantiate
+;;            call
+;;            frame
+;;            (lambda (v f)
+;;              (error "Unknown pat var: LISP-VALUE" v)))) ;; if there is unbound variable in 'call' with the frame, it makes an error occur.
+;;          (singleton-stream frame)
+;;          the-empty-stream))
+;;    frame-stream))
+;; (put 'lisp-value 'qeval lisp-value)
+
+;;;; original extend
+;; (define (extend variable value frame)
+;;   (cons (make-binding variable value) frame))
+
 ;; to be continued
+
+(define (lisp-value-lazy call frame-stream)
+  (stream-flatmap
+   (lambda (frame)
+     (let ((result (execute (instantiate call frame
+                                         (lambda (v f)
+                                           'lazy)))))
+       (cond ((eq? result 'lazy)
+              (singleton-stream (cons (cons 'lazy (cons 'lisp-value call) frame))))
+             ((result) (singleton-stream frame))
+             (else the-empty-stream))))
+   frame-stream))
+
+;; replaced original
+(define (extend variable value frame)
+     (qeval-of-lazy (cons (make-binding variable value) frame)))
+
+(define (qeval-of-lazy frame)
+  (define (lazy? binding) (eq? 'lazy (car binding)))
+  (define lazies (filter lazy? frame))
+  (define assignments (filter (lambda (b) (not (laby? b))) frame))
+
+  (define new-frame frame)
+
+;;; to be continued
+
+  (map (lambda (lazy-exp)
+         (let ((exp (cdr lazy-exp)))
+           (let ((results (qeval exp (singleton-stream new-frame))))
+             
+         
+  (define (replace-lazy-if-possible f)
+    (if (null? f)
+        '()
+        (let ((binding (car f)))
+          (if (eq? (car binding) 'lazy)
+              (cons binding (lazies (cdr f)))
+              (find-lazy (cdr f))))))
+
+  (lazies frame)
+  (let ((results (qeval (cdr binding) (singleton-stream frame))))
+                (if (stream-null? results)
+                    '()
+                    (stream-car results))))))))
+
+
+(put 'lisp-value 'qeval lisp-value-lazy)
 
 
 (define sample "
@@ -78,4 +144,3 @@
 (and (not (salary ?x 35000)) (job ?x (computer programmer)))
 
 ")
-
