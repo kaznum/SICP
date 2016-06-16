@@ -35,55 +35,63 @@
 ;; (define (extend variable value frame)
 ;;   (cons (make-binding variable value) frame))
 
-;; to be continued
+;;;; original execute
+;; (define (execute exp)
+;;   (apply (eval (predicate exp) user-initial-environment)
+;;          (args exp)))
+
+(define (execute exp)
+  (define (has-lazy? exp)
+    (display exp)
+    (newline)
+    (if (null? exp)
+        #f
+        (let ((first (car exp))
+              (rest (cdr exp)))
+          (cond ((pair? first)
+                 (or (has-lazy? first) (has-lazy? rest)))
+                ((eq? 'lazy first) #t)
+                (else (has-lazy? rest))))))
+
+  (if (has-lazy? exp)
+      'lazy
+      (apply (eval (predicate exp) user-initial-environment)
+             (args exp))))
 
 (define (lisp-value-lazy call frame-stream)
   (stream-flatmap
    (lambda (frame)
-     (let ((result (execute (instantiate call frame
-                                         (lambda (v f)
-                                           'lazy)))))
+     (let ((result (execute (instantiate call
+                                         frame
+                                         (lambda (v f) 'lazy)))))
+       (display result)
+       (newline)
        (cond ((eq? result 'lazy)
-              (singleton-stream (cons (cons 'lazy (cons 'lisp-value call) frame))))
-             ((result) (singleton-stream frame))
+              (singleton-stream (cons
+                                 (cons 'lazy (cons 'lisp-value call))
+                                 frame)))
+             (result (singleton-stream frame))
              (else the-empty-stream))))
    frame-stream))
 
 ;; replaced original
 (define (extend variable value frame)
-     (qeval-of-lazy (cons (make-binding variable value) frame)))
+  (qeval-of-lazy (cons (make-binding variable value) frame)))
 
 (define (qeval-of-lazy frame)
   (define (lazy? binding) (eq? 'lazy (car binding)))
   (define lazies (filter lazy? frame))
-  (define assignments (filter (lambda (b) (not (laby? b))) frame))
+  (define assignments (filter (lambda (b) (not (lazy? b))) frame))
 
-  (define new-frame frame)
-
-;;; to be continued
-
-  (map (lambda (lazy-exp)
-         (let ((exp (cdr lazy-exp)))
-           (let ((results (qeval exp (singleton-stream new-frame))))
-             
-         
-  (define (replace-lazy-if-possible f)
-    (if (null? f)
-        '()
-        (let ((binding (car f)))
-          (if (eq? (car binding) 'lazy)
-              (cons binding (lazies (cdr f)))
-              (find-lazy (cdr f))))))
-
-  (lazies frame)
-  (let ((results (qeval (cdr binding) (singleton-stream frame))))
-                (if (stream-null? results)
-                    '()
-                    (stream-car results))))))))
-
+  (if (null? lazies)
+      assignments
+      (let ((exp (cdr (car lazies))))
+        (let ((results (qeval exp (singleton-stream assignments))))
+          (if (stream-null? results)
+              'failed
+              (cons (car lazies) (qeval-of-lazy (append (cdr lazies) assignments))))))))
 
 (put 'lisp-value 'qeval lisp-value-lazy)
-
 
 (define sample "
 
@@ -129,15 +137,28 @@
 (assert! (can-do-job (administration secretary)
                      (administration big wheel)))
 
-
 (and (job ?x (computer programmer)) (salary ?x ?y) (lisp-value > ?y 35000))
+;; result:
+;;  (and (job (hacker alyssa p) (computer programmer)) (salary (hacker alyssa p) 40000) (lisp-value > 40000 35000))
 
 ;; the following does not work in the original version
 ;; because ?y of '(lisp-value < ?y 35000)' is not defined
+;; but it works in this version
 (and (job ?x (computer programmer)) (lisp-value > ?y 35000) (salary ?x ?y))
+;;; result:
+;;   (and (job (hacker alyssa p) (computer programmer)) (lisp-value > 40000 35000) (salary (hacker alyssa p) 40000))
+(and (job ?x (computer programmer)) (lisp-value < ?y 35000) (salary ?x ?y))
+;; result:
+;;  (none)
+
+
+;;; to be continued
+
 
 ;; the following get one result
 (and (job ?x (computer programmer)) (not (salary ?x 35000)))
+;; result
+;; (and (job (hacker alyssa p) (computer programmer)) (not (salary (hacker alyssa p) 35000)))
 
 ;; the following results in no frame in original version
 ;; because ?x is unbound
