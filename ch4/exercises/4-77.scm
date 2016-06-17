@@ -61,19 +61,21 @@
 
 ;; replaced original
 (define (extend variable value frame)
-  (qeval-of-lazy (cons (make-binding variable value) frame)))
+  (apply-lazy-filters (cons (make-binding variable value) frame)))
 
-(define (qeval-of-lazy frame)
-  (define lazies (filter lazy-filter? frame))
+(define (apply-lazy-filters frame)
+  (define filters (filter lazy-filter? frame))
   (define assignments (filter (lambda (b) (not (lazy-filter? b))) frame))
 
-  (if (null? lazies)
-      assignments
-      (let ((exp (cdr (car lazies))))
-        (let ((results (qeval exp (singleton-stream assignments))))
+  (if (null? filters)
+      frame
+      (let ((first-filter (car filters))
+            (rest-filters (cdr filters)))
+        (let ((results (qeval (cdr first-filter) (singleton-stream assignments))))
           (if (stream-null? results)
               'failed
-              (cons (car lazies) (qeval-of-lazy (append (cdr lazies) assignments))))))))
+              (cons first-filter
+                    (apply-lazy-filters (append rest-filters assignments))))))))
 
 ;; negate
 (define (negate-lazy operands frame-stream)
