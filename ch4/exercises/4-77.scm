@@ -52,7 +52,7 @@
 
 
 (define (execute exp)
-  (if (has-lazy? exp)
+  (if (has-unbound? exp)
       'unbound
       (apply (eval (predicate exp) user-initial-environment)
              (args exp))))
@@ -94,7 +94,7 @@
      (let ((result (instantiate (negated-query operands)
                                 frame
                                 (lambda (v f) 'unbound))))
-       (cond ((has-lazy? result)
+       (cond ((has-unbound? result)
               (singleton-stream (append-lazy-filter (cons 'not operands) frame)))
              ((stream-null? (qeval (negated-query operands) (singleton-stream frame)))
               (singleton-stream frame))
@@ -102,15 +102,15 @@
    frame-stream))
 (put 'not 'qeval negate-lazy)
 
-(define (has-lazy? exp)
+(define (has-unbound? exp)
   (if (null? exp)
       #f
       (let ((first (car exp))
             (rest (cdr exp)))
         (cond ((pair? first)
-               (or (has-lazy? first) (has-lazy? rest)))
+               (or (has-unbound? first) (has-unbound? rest)))
               ((eq? 'unbound first) #t)
-              (else (has-lazy? rest))))))
+              (else (has-unbound? rest))))))
 
 (define (append-lazy-filter exp frame)
   (cons (cons 'lazy-filter exp) frame))
