@@ -40,21 +40,20 @@
 ;;   (apply (eval (predicate exp) user-initial-environment)
 ;;          (args exp)))
 
-(define (execute exp)
-  (define (has-lazy? exp)
-    (display exp)
-    (newline)
-    (if (null? exp)
-        #f
-        (let ((first (car exp))
-              (rest (cdr exp)))
-          (cond ((pair? first)
-                 (or (has-lazy? first) (has-lazy? rest)))
-                ((eq? 'lazy first) #t)
-                (else (has-lazy? rest))))))
+;;;; original negate(not)
+;; (define (negate operands frame-stream)
+;;   (stream-flatmap
+;;    (lambda (frame)
+;;      (if (stream-null? (qeval (negated-query operands) (singleton-stream frame)))
+;;          (singleton-stream frame)
+;;          the-empty-stream))
+;;    frame-stream))
+;; (put 'not 'qeval negate)
 
+
+(define (execute exp)
   (if (has-lazy? exp)
-      'lazy
+      'unbound
       (apply (eval (predicate exp) user-initial-environment)
              (args exp))))
 
@@ -63,25 +62,22 @@
    (lambda (frame)
      (let ((result (execute (instantiate call
                                          frame
-                                         (lambda (v f) 'lazy)))))
-       (display result)
-       (newline)
-       (cond ((eq? result 'lazy)
-              (singleton-stream (cons
-                                 (cons 'lazy (cons 'lisp-value call))
-                                 frame)))
+                                         (lambda (v f) 'unbound)))))
+       (cond ((eq? result 'unbound)
+              (singleton-stream (append-lazy-filter (cons 'lisp-value call) frame)))
              (result (singleton-stream frame))
              (else the-empty-stream))))
    frame-stream))
+
+(put 'lisp-value 'qeval lisp-value-lazy)
 
 ;; replaced original
 (define (extend variable value frame)
   (qeval-of-lazy (cons (make-binding variable value) frame)))
 
 (define (qeval-of-lazy frame)
-  (define (lazy? binding) (eq? 'lazy (car binding)))
-  (define lazies (filter lazy? frame))
-  (define assignments (filter (lambda (b) (not (lazy? b))) frame))
+  (define lazies (filter lazy-filter? frame))
+  (define assignments (filter (lambda (b) (not (lazy-filter? b))) frame))
 
   (if (null? lazies)
       assignments
@@ -91,7 +87,35 @@
               'failed
               (cons (car lazies) (qeval-of-lazy (append (cdr lazies) assignments))))))))
 
-(put 'lisp-value 'qeval lisp-value-lazy)
+;; negate
+(define (negate-lazy operands frame-stream)
+  (stream-flatmap
+   (lambda (frame)
+     (let ((result (instantiate (negated-query operands)
+                                frame
+                                (lambda (v f) 'unbound))))
+       (cond ((has-lazy? result)
+              (singleton-stream (append-lazy-filter (cons 'not operands) frame)))
+             ((stream-null? (qeval (negated-query operands) (singleton-stream frame)))
+              (singleton-stream frame))
+             (else the-empty-stream))))
+   frame-stream))
+(put 'not 'qeval negate-lazy)
+
+(define (has-lazy? exp)
+  (if (null? exp)
+      #f
+      (let ((first (car exp))
+            (rest (cdr exp)))
+        (cond ((pair? first)
+               (or (has-lazy? first) (has-lazy? rest)))
+              ((eq? 'unbound first) #t)
+              (else (has-lazy? rest))))))
+
+(define (append-lazy-filter exp frame)
+  (cons (cons 'lazy-filter exp) frame))
+
+(define (lazy-filter? binding) (eq? 'lazy-filter (car binding)))
 
 (define sample "
 
@@ -151,10 +175,6 @@
 ;; result:
 ;;  (none)
 
-
-;;; to be continued
-
-
 ;; the following get one result
 (and (job ?x (computer programmer)) (not (salary ?x 35000)))
 ;; result
@@ -163,5 +183,6 @@
 ;; the following results in no frame in original version
 ;; because ?x is unbound
 (and (not (salary ?x 35000)) (job ?x (computer programmer)))
-
+;; result
+;; (and (not (salary (hacker alyssa p) 35000)) (job (hacker alyssa p) (computer programmer)))
 ")
