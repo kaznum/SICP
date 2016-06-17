@@ -35,11 +35,6 @@
 ;; (define (extend variable value frame)
 ;;   (cons (make-binding variable value) frame))
 
-;;;; original execute
-;; (define (execute exp)
-;;   (apply (eval (predicate exp) user-initial-environment)
-;;          (args exp)))
-
 ;;;; original negate(not)
 ;; (define (negate operands frame-stream)
 ;;   (stream-flatmap
@@ -51,22 +46,15 @@
 ;; (put 'not 'qeval negate)
 
 
-(define (execute exp)
-  (if (has-unbound? exp)
-      'unbound
-      (apply (eval (predicate exp) user-initial-environment)
-             (args exp))))
-
 (define (lisp-value-lazy call frame-stream)
   (stream-flatmap
    (lambda (frame)
-     (let ((result (execute (instantiate call
-                                         frame
-                                         (lambda (v f) 'unbound)))))
-       (cond ((eq? result 'unbound)
-              (singleton-stream (append-lazy-filter (cons 'lisp-value call) frame)))
-             (result (singleton-stream frame))
-             (else the-empty-stream))))
+     (let ((instance (instantiate call frame (lambda (v f) 'unbound))))
+       (if (has-unbound? instance)
+           (singleton-stream (append-lazy-filter (cons 'lisp-value call) frame))
+           (if (execute instance)
+               (singleton-stream frame)
+               the-empty-stream))))
    frame-stream))
 
 (put 'lisp-value 'qeval lisp-value-lazy)
