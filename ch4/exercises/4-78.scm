@@ -35,6 +35,25 @@
 
 (define (query-driver-loop)
 
+  (define current-query 'failed)
+
+  (define (instantiate-first-frame frames-stream)
+    (if (stream-null? frames-stream)
+        (begin
+          (newline)
+          (display output-prompt)
+          (newline)
+          (display ";;; There are no more frame.")
+          (internal-loop the-empty-stream))
+        (begin
+          (newline)
+          (display (instantiate
+                    current-query
+                    (stream-car frames-stream)
+                    (lambda (v f)
+                      (contract-question-mark v))))
+          (internal-loop (stream-cdr frames-stream)))))
+
   (define (internal-loop frames-stream)
     (prompt-for-input input-prompt)
     (let ((q (query-syntax-process (read)))) ;; transform syntactically for efficiency, change the representation of the pattern variables
@@ -44,27 +63,18 @@
              (display "Assertion added to data base.")
              (internal-loop frames-stream))
             ((try-again? q)
-             (if (stream-null? frames-stream)
-                 (begin
-                   (newline)
-                   (display output-prompt)
-                   (display ";;; There are no more frame.")
-                   (query-driver-loop))
-                 (begin
-                   (display (instantiate
-                             q
-                             (stream-car frames-stream)
-                             (lambda (v f)
-                               (contract-question-mark v))))
-                   (internal-loop (stream-cdr frames-stream)))))
+             (instantiate-first-frame frames-stream))
             (else
              (newline)
              (display output-prompt)
-             (internal-loop
-              (qeval q (singleton-stream '()))))))))
+             (set! current-query q)
+             (instantiate-first-frame
+              (qeval q (singleton-stream '())))))))
+  (internal-loop (singleton-stream '())))
+
 
 (define (try-again? q)
-  (eq? q 'try-again))
+  (eq? (type q) 'try-again))
 
 (define sample "
 
@@ -111,3 +121,28 @@
                      (administration big wheel)))
 
 ")
+
+
+;; ;;; test
+
+;; ;;; Query input:
+;; (and (salary ?x ?y) (lisp-value > ?y 40000))
+
+;; ;;; Query result:
+;; (and (salary (scrooge eben) 75000) (lisp-value > 75000 40000))
+
+;; ;;; Query input:
+;; (try-again)
+
+;; (and (salary (warbucks oliver) 150000) (lisp-value > 150000 40000))
+
+;; ;;; Query input:
+;; (try-again)
+
+;; (and (salary (bitdiddle ben) 60000) (lisp-value > 60000 40000))
+
+;; ;;; Query input:
+;; (try-again)
+
+;; ;;; Query result:
+;; ;;; There are no more frame.
