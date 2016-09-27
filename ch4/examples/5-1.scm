@@ -16,4 +16,4 @@
 
 ;; The source of a register assignment can be 'another register', 'an operation result' or 'a constant'.
 
-;; to be continued
+;; The elements of the controller diagram explains the sequence of operation to the data-path diagram.
