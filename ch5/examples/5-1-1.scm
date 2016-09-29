@@ -36,4 +36,8 @@
 ;; The above one has some disadvantages.
 ;; 1. The descriptions of the data-path elements are repeated whenever the elements are mentioned in the controller.
 ;; 2. It's very difficult to know how many registeres, operations, and buttons there are and how they are interconnected.
-;; 3. Operation can operate only on constants and the contents of  registers, not on the results of other operations.
+;; 3. Operation can operate only on constants and the contents of registers, not on the results of other operations.
+
+;;; Actions
+
+;; to be continued
