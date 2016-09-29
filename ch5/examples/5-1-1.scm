@@ -22,4 +22,18 @@
  (goto (label test-b))  ; unconditional branch
  gcd-done)  ; label
 
-;; to be continued
+;; Description only by controller
+(controller
+ test-b
+ (test (op =) (reg b) (const 0))
+ (branch (label gcd-done))
+ (assign t (op rem) (reg a) (reg b))
+ (assign a (reg b))
+ (assign b (reg t))
+ (goto (label test-b))
+ gcd-done)
+
+;; The above one has some disadvantages.
+;; 1. The descriptions of the data-path elements are repeated whenever the elements are mentioned in the controller.
+;; 2. It's very difficult to know how many registeres, operations, and buttons there are and how they are interconnected.
+;; 3. Operation can operate only on constants and the contents of  registers, not on the results of other operations.
