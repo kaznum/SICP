@@ -57,6 +57,8 @@
  (assign b (reg t))
  (goto (label test-b))
  gcd-done
+ ;; `Print` does not produce an output value to be stored in a register.
+ ;; It has an effect but isn't a part of the machine design.
  (perform (op print)
           (reg a))
  (goto (label gcd-loop)))
