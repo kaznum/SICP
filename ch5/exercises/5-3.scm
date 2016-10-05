@@ -17,10 +17,10 @@
  (assign g (const 1.0))
  test-good-enough?
  (test (op good-enough?) (reg g) (reg x))
- (branch
-  (assign g (op improve) (reg g) (reg x))
-  (goto (label test-good-enough?))))
-
+ (branch (label end))
+ (assign g (op improve) (reg g) (reg x))
+ (goto (label test-good-enough?))
+ end)
 ;; 5-3-2.jpg: when they are replaced with arithmetic operations
 
 (controller
@@ -30,7 +30,9 @@
  (assign t2 (op -) (reg t1) (reg x))
  (assign t3 (op abs) (reg t2))
  (test (op <) (reg t3) (const 0.001))
- (branch
-  (assign t4 (op /) (reg x) (reg g))
-  (assign g (average (reg t4) (reg g)))
-  (goto (label test-good-enough?))))
+ (branch (label end))
+ (assign t4 (op /) (reg x) (reg g))
+ (assign g (average (reg t4) (reg g)))
+ (goto (label test-good-enough?))
+ end)
+
