@@ -59,4 +59,24 @@ after-gcd-1
 (goto (label gcd))
 after-gcd-2
 
-;; to be continued
+;; The above is troublesome when there are many points which calls gcd,
+;; which means that controller needs new expression not only to handle the content of 'continue' register as a entry-point label for the designated exiting point.(a special kind of constant)
+;; but also which extends 'goto' instruction to allow execution to continue at the entry point described by the contents of a register.
+
+gcd
+(test (op =) (reg b) (const 0))
+(branch (label gcd-done))
+(assign t (op rem) (reg a) (reg b))
+(assign a (reg b))
+(assign b (reg t))
+(goto (label gcd))
+gcd-done
+(goto (reg continue))
+
+(assign continue (label after-gcd-1))
+(goto (label gcd))
+after-gcd-1
+...
+(assign continue (label after-gcd-2))
+(goto (label gcd))
+after-gcd-2
