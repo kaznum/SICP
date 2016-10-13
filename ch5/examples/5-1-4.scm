@@ -64,7 +64,7 @@
  (restore continue)
  ;; set up to compile Fib(n - 2)
  (assign n (op -) (reg n) (const 2))
- (save continue)   ;; PUSH just almost after POP in the stack, which just want to get the first value of the stack but keep it.(not pop)
+ (save continue)   ;; PUSH just almost after POP in the stack, which just wants to get the first value of the stack but keep it.(not pop)
  (assign continue (labelfib-n-2))
  (save val)  ; save Fib(n - 1)
  (goto (label fib-loop))
