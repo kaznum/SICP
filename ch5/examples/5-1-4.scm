@@ -39,4 +39,265 @@
 
 ;; A double recursion
 
-;; to be continued
+(define (fib n)
+  (if (< n 2)
+      n
+      (+ (fib (- n 1) (fib (- n 2))))))
+
+;; controller
+
+(controller
+ (assing continue (label fib-done))
+
+ fib-loop
+ (test (op <) (reg n) (const 2))
+ (branch (label immediate-answer))
+ ;; set up to computer Fib(n - 1)
+ (save continue)
+ (assign continue (label afterfib-n-1))
+ (save n) ; save old value of n
+ (assign n (op -) (reg n) (const 1)) ; clobber n to n-1
+ (goto (label fib-loop)) ; perform recursive call　
+
+ afterfib-n-1 ; upon return, val contains Fib(n - 2)
+ (restore n)
+ (restore continue)
+ ;; set up to compile Fib(n - 2)
+ (assign n (op -) (reg n) (const 2))
+ (save continue)   ;; PUSH just almost after POP in the stack, which just want to get the first value of the stack but keep it.(not pop)
+ (assign continue (labelfib-n-2))
+ (save val)  ; save Fib(n - 1)
+ (goto (label fib-loop))
+
+ afterfib-n-2  ; upon return, val contains Fib(n - 2)
+ (assign n (reg val))  ; n now contains Fib(n - 2)
+ (restore val)   ; val now contains Fib(n - 1)
+ (restore continue)
+ (assign val
+         (op +) (reg val) (reg n)) ; Fib(n - 1) + Fib(n - 2)
+ (goto (reg continue))  ; return to caller, answer is in val
+
+ immediate-answer
+ (assign val (reg n))  ; base case: Fib(n) = n
+ (goto (reg continue))
+
+ fib-done)
+
+
+
+;; fib(4)
+
+;; continue stack: []
+;; n stack: []
+;; val stack: []
+;; continue reg: nil
+;; n reg: nil
+;; val reg: nil
+
+;; ->
+
+;; continue stack: [fib-done]
+;; n stack: [4]
+;; val stack: []
+;; continue reg: afterfib-n-1
+;; n reg: 3
+;; val reg: nil
+
+;; ->
+
+;; continue stack: [afterfib-n-1 fib-done]
+;; n stack: [3 4]
+;; val stack: []
+;; continue reg: afterfib-n-1
+;; n reg: 2
+;; val reg: nil
+
+;; ->
+
+;; continue stack: [afterfib-n-1 afterfib-n-1 fib-done]
+;; n stack: [2 3 4]
+;; val stack: []
+;; continue reg: afterfib-n-1
+;; n reg: 1
+;; val reg: nil
+
+
+;; ->
+
+;;;; (test (op <) (reg n) (const 2)) => truthy => jump to 'immediate-answer'
+;;;; in immediate-answer
+
+;; continue stack: [afterfib-n-1 afterfib-n-1 fib-done]
+;; n stack: [2 3 4]
+;; val stack: []
+;; continue reg: afterfib-n-1
+;; n reg: 1
+;; val reg: 1
+
+
+;; ->
+
+;;;; in afterfib-n-1
+
+;; continue stack: [afterfib-n-1 afterfib-n-1 fib-done]
+;; n stack: [3 4]
+;; val stack: [1]
+;; continue reg: afterfib-n-2
+;; n reg: 2 -> 0
+;; val reg: 1
+
+;; ->
+
+;;;; in fib-loop
+
+;;;; (test (op <) (reg n) (const 2)) => truthy => jump to 'immediate-answer'
+;;;; in immediate-answer
+
+;; continue stack: [afterfib-n-1 afterfib-n-1 fib-done]
+;; n stack: [3 4]
+;; val stack: [1]
+;; continue reg: afterfib-n-2
+;; n reg: 0
+;; val reg: 0
+
+;; ->
+
+;;;; in afterfib-n-2
+
+;; continue stack: [afterfib-n-1 fib-done]
+;; n stack: [3 4]
+;; val stack: []
+;; continue reg: afterfib-n-1
+;; n reg: 1
+;; val reg: 1
+
+;; ->
+
+;;;; in afterfib-n-1
+
+;; continue stack: [afterfib-n-1 fib-done]
+;; n stack: [4]
+;; val stack: [1]
+;; continue reg: afterfib-n-2
+;; n reg: 3 -> 1
+;; val reg: 1
+
+;; ->
+
+;;;; in fib-loop
+
+;;;; jump to immediate-answer
+
+;; continue stack: [afterfib-n-1 fib-done]
+;; n stack: [4]
+;; val stack: [1]
+;; continue reg: afterfib-n-2
+;; n reg: 1
+;; val reg: 1
+
+
+;; ->
+
+;;;; in afterfib-n-2
+
+;; continue stack: [ fib-done]
+;; n stack: [4]
+;; val stack: []
+;; continue reg: afterfib-n-1
+;; n reg: 1
+;; val reg: 1 -> 2
+
+
+;; ->
+
+;;;; in afterfib-n-1
+
+;; continue stack: [fib-done]
+;; n stack: [4]
+;; val stack: [2]
+;; continue reg: afterfib-n-2
+;; n reg: 4 -> 2
+;; val reg: 1 -> 2
+
+;; ->
+
+;;;; in fib-loop
+
+;; continue stack: [afterfib-n-2 fib-done]
+;; n stack: [2 4]
+;; val stack: [2]
+;; continue reg: afterfib-n-1
+;; n reg: 2 -> 1
+;; val reg: 2
+
+;; ->
+
+;;;; in fib-loop
+;;;; jump to immediate-answer
+
+;; continue stack: [afterfib-n-2 fib-done]
+;; n stack: [2 4]
+;; val stack: [2]
+;; continue reg: afterfib-n-1
+;; n reg: 1
+;; val reg: 1
+
+
+;; ->
+
+;;;; in afterfib-n-1
+
+;; continue stack: [afterfib-n-2 fib-done]
+;; n stack: [4]
+;; val stack: [1 2]
+;; continue reg: afterfib-n-2
+;; n reg: 2 -> 0
+;; val reg: 1
+
+
+;; ->
+
+;;;; in fib-loop
+;;;; jump to immediate-answer
+
+;; continue stack: [afterfib-n-2 fib-done]
+;; n stack: [4]
+;; val stack: [1 2]
+;; continue reg: afterfib-n-2
+;; n reg: 0
+;; val reg: 0
+
+;; ->
+
+;;;; in afterfib-n-2
+
+;; continue stack: [fib-done]
+;; n stack: [4]
+;; val stack: [2]
+;; continue reg: afterfib-n-2
+;; n reg: 0
+;; val reg: 1
+
+;; ->
+
+;;;; in afterfib-n-2
+
+;; continue stack: [fib-done]
+;; n stack: [4]
+;; val stack: []
+;; continue reg: fib-done
+;; n reg: 1
+;; val reg: 3
+
+
+;; ->
+;; fib-done
+
+;; continue stack: [fib-done]
+;; n stack: [4]
+;; val stack: []
+;; continue reg: fib-done
+;; n reg: 1
+;; val reg: 3
+
+;; The answer is 3
