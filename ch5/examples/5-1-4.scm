@@ -282,7 +282,7 @@
 
 ;;;; in afterfib-n-2
 
-;; continue stack: [fib-done]
+;; continue stack: []
 ;; n stack: [4]
 ;; val stack: []
 ;; continue reg: fib-done
@@ -293,7 +293,7 @@
 ;; ->
 ;; fib-done
 
-;; continue stack: [fib-done]
+;; continue stack: []
 ;; n stack: [4]
 ;; val stack: []
 ;; continue reg: fib-done
